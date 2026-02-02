@@ -1,0 +1,858 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   HIRVO.AI - Premium Career Platform Design System
+   Aesthetic: "Confident Professional" - Warm, trustworthy, sophisticated
+   ============================================================================ */
+
+/* Import distinctive fonts */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap');
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    /* Core palette - warm charcoal + emerald accent */
+    --background: 40 20% 98%;
+    --foreground: 220 25% 12%;
+
+    /* Card surfaces with subtle warmth */
+    --card: 40 30% 99%;
+    --card-foreground: 220 25% 12%;
+
+    --popover: 40 30% 99%;
+    --popover-foreground: 220 25% 12%;
+
+    /* Primary: Deep charcoal with warmth */
+    --primary: 220 20% 18%;
+    --primary-foreground: 40 20% 98%;
+
+    /* Secondary: Warm off-white */
+    --secondary: 40 25% 95%;
+    --secondary-foreground: 220 25% 18%;
+
+    /* Muted: Soft warm gray */
+    --muted: 40 15% 93%;
+    --muted-foreground: 220 10% 45%;
+
+    /* Accent: Sophisticated emerald */
+    --accent: 158 64% 40%;
+    --accent-foreground: 40 20% 98%;
+
+    /* Destructive: Warm red */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 40 20% 98%;
+
+    /* Borders and inputs */
+    --border: 40 15% 88%;
+    --input: 40 15% 88%;
+    --ring: 158 64% 40%;
+
+    /* Score colors - refined palette */
+    --score-excellent: 158 64% 40%;
+    --score-good: 158 45% 50%;
+    --score-warning: 38 92% 50%;
+    --score-danger: 0 72% 51%;
+
+    /* Chart colors */
+    --chart-1: 158 64% 40%;
+    --chart-2: 220 25% 30%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 60% 55%;
+    --chart-5: 0 72% 51%;
+
+    --radius: 0.75rem;
+
+    /* Severity colors - Light mode */
+    --severity-critical: 0 84% 60%;
+    --severity-critical-bg: 0 86% 97%;
+    --severity-critical-border: 0 74% 90%;
+
+    --severity-warning: 38 92% 50%;
+    --severity-warning-bg: 38 92% 95%;
+    --severity-warning-border: 38 82% 85%;
+
+    --severity-info: 199 89% 48%;
+    --severity-info-bg: 199 89% 96%;
+    --severity-info-border: 199 80% 88%;
+
+    --severity-success: 158 64% 40%;
+    --severity-success-bg: 158 64% 95%;
+    --severity-success-border: 158 54% 85%;
+
+    /* Icon container colors - Light mode */
+    --icon-red: 0 84% 60%;
+    --icon-red-bg: 0 86% 97%;
+    --icon-red-border: 0 74% 90%;
+
+    --icon-violet: 263 70% 50%;
+    --icon-violet-bg: 263 70% 97%;
+    --icon-violet-border: 263 60% 90%;
+
+    --icon-emerald: 158 64% 40%;
+    --icon-emerald-bg: 158 64% 95%;
+    --icon-emerald-border: 158 54% 85%;
+
+    --icon-sky: 199 89% 48%;
+    --icon-sky-bg: 199 89% 96%;
+    --icon-sky-border: 199 80% 88%;
+
+    --icon-amber: 38 92% 50%;
+    --icon-amber-bg: 38 92% 95%;
+    --icon-amber-border: 38 82% 85%;
+  }
+
+  /* Dark theme: Inverted contrast - muted gray bg with dark charcoal cards */
+  .dark {
+    --background: 200 8% 88%;
+    --foreground: 220 20% 14%;
+
+    --card: 220 18% 13%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 220 18% 13%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 220 18% 13%;
+    --primary-foreground: 0 0% 96%;
+
+    --secondary: 200 6% 82%;
+    --secondary-foreground: 220 20% 14%;
+
+    --muted: 200 6% 82%;
+    --muted-foreground: 220 10% 40%;
+
+    --accent: 158 64% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 8% 78%;
+    --input: 220 18% 13%;
+    --ring: 158 64% 42%;
+
+    --chart-1: 158 64% 42%;
+    --chart-2: 220 30% 35%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 60% 55%;
+    --chart-5: 0 72% 50%;
+
+    /* Severity colors - Dark mode (adapted for charcoal cards) */
+    --severity-critical: 0 72% 55%;
+    --severity-critical-bg: 0 50% 20%;
+    --severity-critical-border: 0 50% 30%;
+
+    --severity-warning: 38 80% 55%;
+    --severity-warning-bg: 38 50% 18%;
+    --severity-warning-border: 38 50% 28%;
+
+    --severity-info: 199 80% 55%;
+    --severity-info-bg: 199 50% 18%;
+    --severity-info-border: 199 50% 28%;
+
+    --severity-success: 158 64% 50%;
+    --severity-success-bg: 158 40% 18%;
+    --severity-success-border: 158 40% 28%;
+
+    /* Icon container colors - Dark mode */
+    --icon-red: 0 72% 55%;
+    --icon-red-bg: 0 50% 20%;
+    --icon-red-border: 0 50% 30%;
+
+    --icon-violet: 280 60% 60%;
+    --icon-violet-bg: 280 40% 20%;
+    --icon-violet-border: 280 40% 30%;
+
+    --icon-emerald: 158 64% 50%;
+    --icon-emerald-bg: 158 40% 18%;
+    --icon-emerald-border: 158 40% 28%;
+
+    --icon-sky: 199 80% 55%;
+    --icon-sky-bg: 199 50% 18%;
+    --icon-sky-border: 199 50% 28%;
+
+    --icon-amber: 38 80% 55%;
+    --icon-amber-bg: 38 50% 18%;
+    --icon-amber-border: 38 50% 28%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-feature-settings: 'ss01' on, 'ss02' on;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Display font for headings */
+  h1, h2, h3, .font-display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+  }
+
+  /* Smooth focus outlines */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* ============================================================================
+   ANIMATION KEYFRAMES
+   ============================================================================ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes draw-circle {
+  from {
+    stroke-dashoffset: var(--circumference);
+  }
+  to {
+    stroke-dashoffset: var(--progress);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ============================================================================
+   ANIMATION UTILITY CLASSES
+   ============================================================================ */
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.6s ease-out forwards;
+  }
+
+  .animate-fade-down {
+    animation: fade-down 0.6s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.4s ease-out forwards;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.5s ease-out forwards;
+  }
+
+  .animate-slide-in-left {
+    animation: slide-in-left 0.5s ease-out forwards;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted-foreground) / 0.1) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
+
+  .animate-bounce-subtle {
+    animation: bounce-subtle 2s ease-in-out infinite;
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  /* Staggered animation delays */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-600 { animation-delay: 600ms; }
+  .delay-700 { animation-delay: 700ms; }
+  .delay-800 { animation-delay: 800ms; }
+
+  /* Animation fill modes */
+  .fill-forwards {
+    animation-fill-mode: forwards;
+  }
+
+  .fill-backwards {
+    animation-fill-mode: backwards;
+  }
+
+  .fill-both {
+    animation-fill-mode: both;
+  }
+}
+
+/* ============================================================================
+   GRAIN TEXTURE OVERLAY
+   ============================================================================ */
+
+.grain-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================================
+   GRADIENT UTILITIES
+   ============================================================================ */
+
+.gradient-mesh {
+  background:
+    radial-gradient(ellipse at 20% 30%, hsl(158 64% 40% / 0.15), transparent 50%),
+    radial-gradient(ellipse at 80% 70%, hsl(220 25% 30% / 0.1), transparent 50%),
+    radial-gradient(ellipse at 60% 20%, hsl(38 92% 50% / 0.08), transparent 40%);
+}
+
+.gradient-hero {
+  background: linear-gradient(
+    135deg,
+    hsl(40 30% 99%) 0%,
+    hsl(40 25% 96%) 50%,
+    hsl(158 30% 95%) 100%
+  );
+}
+
+.gradient-emerald {
+  background: linear-gradient(
+    135deg,
+    hsl(158 64% 40%) 0%,
+    hsl(158 55% 35%) 100%
+  );
+}
+
+.gradient-charcoal {
+  background: linear-gradient(
+    135deg,
+    hsl(220 25% 18%) 0%,
+    hsl(220 20% 12%) 100%
+  );
+}
+
+/* Dark theme specific - inverted contrast look */
+.dark .gradient-hero {
+  background: linear-gradient(
+    135deg,
+    hsl(200 8% 88%) 0%,
+    hsl(200 6% 84%) 50%,
+    hsl(200 8% 86%) 100%
+  );
+}
+
+.dark .gradient-mesh {
+  background:
+    radial-gradient(ellipse at 20% 30%, hsl(158 64% 42% / 0.08), transparent 50%),
+    radial-gradient(ellipse at 80% 70%, hsl(220 18% 13% / 0.15), transparent 50%),
+    radial-gradient(ellipse at 60% 20%, hsl(38 70% 50% / 0.05), transparent 40%);
+}
+
+.dark .glass {
+  background: hsl(var(--card) / 0.95);
+  backdrop-filter: blur(12px);
+}
+
+.dark .glass-strong {
+  background: hsl(var(--card) / 0.98);
+  backdrop-filter: blur(20px);
+}
+
+.gradient-warm {
+  background: linear-gradient(
+    135deg,
+    hsl(40 40% 96%) 0%,
+    hsl(38 35% 90%) 100%
+  );
+}
+
+/* ============================================================================
+   GLASSMORPHISM
+   ============================================================================ */
+
+.glass {
+  background: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-strong {
+  background: hsl(var(--card) / 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ============================================================================
+   CARD VARIANTS
+   ============================================================================ */
+
+.card-elevated {
+  @apply bg-card rounded-xl border shadow-sm;
+  box-shadow:
+    0 1px 3px hsl(220 25% 12% / 0.04),
+    0 4px 12px hsl(220 25% 12% / 0.06);
+}
+
+.card-elevated:hover {
+  box-shadow:
+    0 2px 6px hsl(220 25% 12% / 0.06),
+    0 8px 24px hsl(220 25% 12% / 0.08);
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.card-interactive {
+  @apply card-elevated cursor-pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-interactive:hover {
+  @apply border-accent/30;
+}
+
+.card-highlight {
+  @apply bg-card rounded-xl border-2 border-accent/20;
+  box-shadow:
+    0 0 0 4px hsl(var(--accent) / 0.05),
+    0 4px 12px hsl(220 25% 12% / 0.06);
+}
+
+/* ============================================================================
+   SCORE GAUGE ANIMATIONS
+   ============================================================================ */
+
+.score-gauge-circle {
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.score-gauge-text {
+  animation: fade-up 0.8s ease-out 0.5s both;
+}
+
+/* ============================================================================
+   BUTTON ENHANCEMENTS
+   ============================================================================ */
+
+.btn-primary-glow {
+  @apply relative overflow-hidden;
+}
+
+.btn-primary-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    45deg,
+    hsl(var(--accent) / 0) 0%,
+    hsl(var(--accent) / 0.2) 50%,
+    hsl(var(--accent) / 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-primary-glow:hover::before {
+  opacity: 1;
+}
+
+/* ============================================================================
+   INPUT ENHANCEMENTS
+   ============================================================================ */
+
+.input-enhanced {
+  @apply transition-all duration-200;
+}
+
+.input-enhanced:focus {
+  @apply border-accent shadow-sm;
+  box-shadow: 0 0 0 3px hsl(var(--accent) / 0.1);
+}
+
+/* ============================================================================
+   TYPOGRAPHY ENHANCEMENTS
+   ============================================================================ */
+
+.text-gradient {
+  background: linear-gradient(135deg, hsl(220 25% 18%) 0%, hsl(158 64% 35%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-emerald {
+  background: linear-gradient(135deg, hsl(158 64% 40%) 0%, hsl(158 55% 30%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================================
+   HIGHLIGHT COLORS - REDESIGNED
+   ============================================================================ */
+
+/* ATS Highlights - warmer, clearer */
+.highlight-missing-keyword {
+  @apply bg-red-100/80 border-b-2 border-red-400 hover:bg-red-200/80 cursor-pointer transition-colors;
+}
+
+.highlight-weak-keyword {
+  @apply bg-amber-100/80 border-b-2 border-amber-400 hover:bg-amber-200/80 cursor-pointer transition-colors;
+}
+
+.highlight-formatting-ats {
+  @apply bg-orange-100/80 border-b-2 border-orange-400 hover:bg-orange-200/80 cursor-pointer transition-colors;
+}
+
+/* HR Highlights - sophisticated blues and purples */
+.highlight-formatting-hr {
+  @apply bg-sky-100/80 border-b-2 border-sky-400 hover:bg-sky-200/80 cursor-pointer transition-colors;
+}
+
+.highlight-semantic {
+  @apply bg-violet-100/80 border-b-2 border-violet-400 hover:bg-violet-200/80 cursor-pointer transition-colors;
+}
+
+.highlight-llm-review {
+  @apply bg-emerald-100/80 border-b-2 border-emerald-400 hover:bg-emerald-200/80 cursor-pointer transition-colors;
+}
+
+.highlight-selected {
+  @apply ring-2 ring-offset-1 ring-accent;
+}
+
+/* ============================================================================
+   SCROLLBAR STYLING
+   ============================================================================ */
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* ============================================================================
+   SELECTION STYLING
+   ============================================================================ */
+
+::selection {
+  background: hsl(var(--accent) / 0.2);
+  color: inherit;
+}
+
+/* ============================================================================
+   LOADING SKELETON ENHANCEMENT
+   ============================================================================ */
+
+.skeleton {
+  @apply animate-shimmer rounded-md bg-muted;
+}
+
+/* ============================================================================
+   BADGE VARIANTS
+   ============================================================================ */
+
+.badge-score-excellent {
+  @apply bg-emerald-100 text-emerald-800 border-emerald-200;
+}
+
+.badge-score-good {
+  @apply bg-emerald-50 text-emerald-700 border-emerald-100;
+}
+
+.badge-score-warning {
+  @apply bg-amber-100 text-amber-800 border-amber-200;
+}
+
+.badge-score-danger {
+  @apply bg-red-100 text-red-800 border-red-200;
+}
+
+/* ============================================================================
+   FOCUS STATES FOR ACCESSIBILITY
+   ============================================================================ */
+
+.focus-ring {
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  .card-elevated,
+  .card-interactive {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+}
+
+/* ============================================================================
+   SEVERITY UTILITY CLASSES
+   ============================================================================ */
+
+.severity-critical {
+  color: hsl(var(--severity-critical));
+  background-color: hsl(var(--severity-critical-bg));
+  border-color: hsl(var(--severity-critical-border));
+}
+
+.severity-warning {
+  color: hsl(var(--severity-warning));
+  background-color: hsl(var(--severity-warning-bg));
+  border-color: hsl(var(--severity-warning-border));
+}
+
+.severity-info {
+  color: hsl(var(--severity-info));
+  background-color: hsl(var(--severity-info-bg));
+  border-color: hsl(var(--severity-info-border));
+}
+
+.severity-success {
+  color: hsl(var(--severity-success));
+  background-color: hsl(var(--severity-success-bg));
+  border-color: hsl(var(--severity-success-border));
+}
+
+/* Icon container classes */
+.icon-red {
+  color: hsl(var(--icon-red));
+  background-color: hsl(var(--icon-red-bg));
+  border-color: hsl(var(--icon-red-border));
+}
+
+.icon-violet {
+  color: hsl(var(--icon-violet));
+  background-color: hsl(var(--icon-violet-bg));
+  border-color: hsl(var(--icon-violet-border));
+}
+
+.icon-emerald {
+  color: hsl(var(--icon-emerald));
+  background-color: hsl(var(--icon-emerald-bg));
+  border-color: hsl(var(--icon-emerald-border));
+}
+
+.icon-sky {
+  color: hsl(var(--icon-sky));
+  background-color: hsl(var(--icon-sky-bg));
+  border-color: hsl(var(--icon-sky-border));
+}
+
+.icon-amber {
+  color: hsl(var(--icon-amber));
+  background-color: hsl(var(--icon-amber-bg));
+  border-color: hsl(var(--icon-amber-border));
+}
+
+/* ============================================================================
+   DARK MODE CARD ENHANCEMENTS
+   ============================================================================ */
+
+.dark .card-elevated {
+  box-shadow:
+    0 1px 3px hsl(0 0% 0% / 0.2),
+    0 4px 12px hsl(0 0% 0% / 0.15);
+}
+
+.dark .card-elevated:hover {
+  box-shadow:
+    0 2px 6px hsl(0 0% 0% / 0.25),
+    0 8px 24px hsl(0 0% 0% / 0.2);
+}
+
+/* ============================================================================
+   DARK MODE BADGE VARIANTS
+   ============================================================================ */
+
+.dark .badge-score-excellent {
+  @apply bg-emerald-900/50 text-emerald-300 border-emerald-700;
+}
+
+.dark .badge-score-good {
+  @apply bg-emerald-900/30 text-emerald-400 border-emerald-800;
+}
+
+.dark .badge-score-warning {
+  @apply bg-amber-900/50 text-amber-300 border-amber-700;
+}
+
+.dark .badge-score-danger {
+  @apply bg-red-900/50 text-red-300 border-red-700;
+}

@@ -1,0 +1,41 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link "HIRVO.AI" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - heading "HIRVO.AI" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Create your account
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - generic [ref=e11]: Full Name
+          - textbox "Full Name" [ref=e12]:
+            - /placeholder: John Doe
+        - generic [ref=e13]:
+          - generic [ref=e14]: Email
+          - textbox "Email" [ref=e15]:
+            - /placeholder: you@example.com
+        - generic [ref=e16]:
+          - generic [ref=e17]: Password
+          - textbox "Password" [ref=e18]:
+            - /placeholder: ••••••••
+        - generic [ref=e19]:
+          - generic [ref=e20]: Confirm Password
+          - textbox "Confirm Password" [ref=e21]:
+            - /placeholder: ••••••••
+        - button "Create account" [ref=e22]
+      - generic [ref=e27]: Or continue with
+      - button "Sign up with Google" [ref=e28]:
+        - img [ref=e29]
+        - text: Sign up with Google
+      - paragraph [ref=e34]:
+        - text: Already have an account?
+        - link "Sign in" [ref=e35] [cursor=pointer]:
+          - /url: /login
+  - button "Open Next.js Dev Tools" [ref=e41] [cursor=pointer]:
+    - img [ref=e42]
+  - alert [ref=e45]
+```

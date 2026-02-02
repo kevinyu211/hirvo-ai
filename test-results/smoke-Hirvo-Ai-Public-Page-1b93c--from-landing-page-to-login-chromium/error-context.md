@@ -1,0 +1,67 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - link "HIRVO.AI" [ref=e6] [cursor=pointer]:
+            - /url: /
+            - img [ref=e7]
+            - generic [ref=e9]: HIRVO.AI
+          - navigation [ref=e10]:
+            - link "Analyze" [ref=e11] [cursor=pointer]:
+              - /url: /analyze
+            - link "Interview" [ref=e12] [cursor=pointer]:
+              - /url: /interview
+        - generic [ref=e13]:
+          - link "Log in" [ref=e14] [cursor=pointer]:
+            - /url: /login
+            - button "Log in" [ref=e15]
+          - link "Get Started" [ref=e16] [cursor=pointer]:
+            - /url: /signup
+            - button "Get Started" [ref=e17]
+    - main [ref=e18]:
+      - generic [ref=e20]:
+        - generic [ref=e21]: Resume Intelligence Platform
+        - heading "Hirvo.Ai Global Talent Intelligence" [level=1] [ref=e23]:
+          - generic [ref=e24]: Hirvo.Ai
+          - generic [ref=e25]: Global Talent Intelligence
+        - paragraph [ref=e26]:
+          - text: Correct the unfairness of the ATS.
+          - text: See what the system sees, verify your visa safety,
+          - text: and level the playing field.
+        - generic [ref=e27]:
+          - link "Start Analysis" [ref=e28] [cursor=pointer]:
+            - /url: /analyze
+            - generic [ref=e29]:
+              - text: Start Analysis
+              - img [ref=e31]
+          - button "System Protocols" [ref=e33]:
+            - link "System Protocols" [ref=e34] [cursor=pointer]:
+              - /url: "#features"
+              - text: System Protocols↗
+        - generic [ref=e36]: 2077.02.02
+        - generic: 01 //
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - heading "System Features" [level=2] [ref=e40]
+          - paragraph [ref=e41]: Our hybrid system combines ATS simulation with legal-safe visa logic.
+        - generic [ref=e42]:
+          - generic [ref=e44] [cursor=pointer]:
+            - img [ref=e46]
+            - heading "ATS Simulation" [level=3] [ref=e51]
+            - paragraph [ref=e52]: See exactly what the robots see. Identify dropped keywords and parsing errors.
+          - generic [ref=e54] [cursor=pointer]:
+            - img [ref=e56]
+            - heading "Risk Scoring" [level=3] [ref=e59]
+            - paragraph [ref=e60]: Get a 0-100 rejection risk score based on formatting, content, and structure.
+          - generic [ref=e62] [cursor=pointer]:
+            - img [ref=e64]
+            - heading "Visa-Aware Clarity" [level=3] [ref=e67]
+            - paragraph [ref=e68]: Detect sponsorship policies and clarify your work authorization safely.
+  - button "Open Next.js Dev Tools" [ref=e74] [cursor=pointer]:
+    - img [ref=e75]
+  - alert [ref=e78]
+```

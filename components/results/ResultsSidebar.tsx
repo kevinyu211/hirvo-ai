@@ -1,0 +1,86 @@
+"use client";
+
+import { SidebarScoreToggle } from "./SidebarScoreToggle";
+import { SidebarScoreOverview } from "./SidebarScoreOverview";
+import { QuickFixesSection } from "./QuickFixesSection";
+import { ThingsToAddSection } from "./ThingsToAddSection";
+import { RejectionRisksSection } from "./RejectionRisksSection";
+import { FullBreakdownSection } from "./FullBreakdownSection";
+import type { ATSScore, HRScore, Suggestion } from "@/lib/types";
+import type { HRLayerData } from "@/components/scores/HRScoreCard";
+import type { ViewMode } from "@/components/editor/ViewToggle";
+
+export interface ResultsSidebarProps {
+  activeView: ViewMode;
+  onViewChange: (view: ViewMode) => void;
+  atsScore: ATSScore | null;
+  hrScore: HRScore | null;
+  hrLayers?: HRLayerData;
+  suggestions: Suggestion[];
+  onApplyFix: (suggestion: Suggestion) => void;
+  onDismiss: (suggestion: Suggestion) => void;
+  onViewSuggestion: (suggestion: Suggestion) => void;
+}
+
+export function ResultsSidebar({
+  activeView,
+  onViewChange,
+  atsScore,
+  hrScore,
+  hrLayers,
+  suggestions,
+  onApplyFix,
+  onDismiss,
+  onViewSuggestion,
+}: ResultsSidebarProps) {
+  return (
+    <div className="flex flex-col h-full">
+      {/* Score Toggle */}
+      <div className="p-4 border-b">
+        <SidebarScoreToggle activeView={activeView} onViewChange={onViewChange} />
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Score Overview */}
+        <SidebarScoreOverview
+          activeView={activeView}
+          atsScore={atsScore}
+          hrScore={hrScore}
+          hrLayers={hrLayers}
+        />
+
+        {/* Quick Fixes */}
+        <QuickFixesSection
+          suggestions={suggestions}
+          activeView={activeView}
+          onApplyFix={onApplyFix}
+          onDismiss={onDismiss}
+          onView={onViewSuggestion}
+        />
+
+        {/* Things to Add */}
+        <ThingsToAddSection
+          activeView={activeView}
+          atsScore={atsScore}
+          hrLayers={hrLayers}
+        />
+
+        {/* Rejection Risks */}
+        <RejectionRisksSection
+          activeView={activeView}
+          atsScore={atsScore}
+          hrLayers={hrLayers}
+        />
+
+        {/* Full Breakdown */}
+        <FullBreakdownSection
+          activeView={activeView}
+          atsScore={atsScore}
+          hrScore={hrScore}
+          hrLayers={hrLayers}
+        />
+      </div>
+    </div>
+  );
+}
