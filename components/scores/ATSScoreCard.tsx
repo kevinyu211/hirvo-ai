@@ -17,31 +17,43 @@ import {
 } from "@/components/ui/tooltip";
 
 // ============================================================================
-// Score Gauge — circular SVG gauge with animated draw effect
+// Score Gauge — circular SVG gauge with animated draw effect + bold styling
 // ============================================================================
 function ScoreGauge({ score, size = 160 }: { score: number; size?: number }) {
   const radius = (size - 20) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = circumference - (score / 100) * circumference;
-  const strokeWidth = 12;
+  const strokeWidth = 14;
 
   // Color based on score - theme-aware
   const getColorClass = (score: number) => {
-    if (score >= 75) return { stroke: "stroke-[hsl(var(--severity-success))]", text: "text-[hsl(var(--severity-success))]", bg: "bg-[hsl(var(--severity-success))]" };
-    if (score >= 50) return { stroke: "stroke-[hsl(var(--severity-warning))]", text: "text-[hsl(var(--severity-warning))]", bg: "bg-[hsl(var(--severity-warning))]" };
-    return { stroke: "stroke-[hsl(var(--severity-critical))]", text: "text-[hsl(var(--severity-critical))]", bg: "bg-[hsl(var(--severity-critical))]" };
+    if (score >= 75) return { stroke: "stroke-[hsl(var(--severity-success))]", text: "text-[hsl(var(--severity-success))]", bg: "bg-[hsl(var(--severity-success))]", glow: true };
+    if (score >= 50) return { stroke: "stroke-[hsl(var(--severity-warning))]", text: "text-[hsl(var(--severity-warning))]", bg: "bg-[hsl(var(--severity-warning))]", glow: false };
+    return { stroke: "stroke-[hsl(var(--severity-critical))]", text: "text-[hsl(var(--severity-critical))]", bg: "bg-[hsl(var(--severity-critical))]", glow: false };
   };
 
   const colors = getColorClass(score);
+  const isExcellent = score >= 85;
+  const containerClass = isExcellent
+    ? "relative inline-flex items-center justify-center rounded-full score-excellent p-2"
+    : "relative inline-flex items-center justify-center";
 
   return (
-    <div className="relative inline-flex items-center justify-center">
+    <div className={containerClass}>
       <svg
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         className="-rotate-90"
       >
+        {/* Gradient definition */}
+        <defs>
+          <linearGradient id={`atsGradient-${size}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="hsl(158 64% 50%)" />
+            <stop offset="100%" stopColor="hsl(158 64% 35%)" />
+          </linearGradient>
+        </defs>
+
         {/* Background circle */}
         <circle
           cx={size / 2}
@@ -50,7 +62,7 @@ function ScoreGauge({ score, size = 160 }: { score: number; size?: number }) {
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-muted/30"
+          className="text-muted/20"
         />
         {/* Progress circle with animated draw */}
         <circle
@@ -62,31 +74,33 @@ function ScoreGauge({ score, size = 160 }: { score: number; size?: number }) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={progress}
-          className={`${colors.stroke} score-gauge-circle`}
+          stroke={score >= 75 ? `url(#atsGradient-${size})` : undefined}
+          className={`${score < 75 ? colors.stroke : ''} score-gauge-circle`}
           style={{
             "--circumference": circumference,
             "--progress": progress,
+            filter: colors.glow ? "drop-shadow(0 0 8px hsl(158 64% 40% / 0.4))" : undefined,
           } as React.CSSProperties}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center score-gauge-text">
-        <span className={`text-3xl md:text-4xl font-display font-bold ${colors.text}`}>
+        <span className={`text-4xl md:text-5xl font-display font-bold ${colors.text} tracking-tight`}>
           {score}
         </span>
-        <span className="text-xs text-muted-foreground font-medium">out of 100</span>
+        <span className="text-xs text-muted-foreground font-medium tracking-wide uppercase">out of 100</span>
       </div>
     </div>
   );
 }
 
 // ============================================================================
-// Score Bar — horizontal bar for sub-scores
+// Score Bar — horizontal bar for sub-scores - Bold styling
 // ============================================================================
 function ScoreBar({ score, label }: { score: number; label: string }) {
   const getColorClass = (score: number) => {
-    if (score >= 75) return "bg-[hsl(var(--severity-success))]";
-    if (score >= 50) return "bg-[hsl(var(--severity-warning))]";
-    return "bg-[hsl(var(--severity-critical))]";
+    if (score >= 75) return "bg-gradient-to-r from-emerald-500 to-emerald-400";
+    if (score >= 50) return "bg-gradient-to-r from-amber-500 to-amber-400";
+    return "bg-gradient-to-r from-red-500 to-red-400";
   };
 
   const getTextColorClass = (score: number) => {
@@ -96,16 +110,16 @@ function ScoreBar({ score, label }: { score: number; label: string }) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground font-medium">{label}</span>
-        <span className={`font-semibold ${getTextColorClass(score)}`}>
+        <span className={`font-bold ${getTextColorClass(score)}`}>
           {score}%
         </span>
       </div>
-      <div className="h-2.5 w-full rounded-full bg-muted/50 overflow-hidden">
+      <div className="h-3 w-full rounded-full bg-muted/30 overflow-hidden">
         <div
-          className={`h-full rounded-full ${getColorClass(score)} transition-all duration-700 ease-out`}
+          className={`h-full rounded-full ${getColorClass(score)} transition-all duration-700 ease-out shadow-sm`}
           style={{ width: `${Math.min(score, 100)}%` }}
         />
       </div>
@@ -133,7 +147,7 @@ function SeverityBadge({ severity }: { severity: ATSIssue["severity"] }) {
 }
 
 // ============================================================================
-// Expandable breakdown section
+// Expandable breakdown section - Bold styling
 // ============================================================================
 function BreakdownSection({
   title,
@@ -157,7 +171,7 @@ function BreakdownSection({
       <CollapsibleTrigger asChild>
         <button
           type="button"
-          className="flex w-full items-center justify-between rounded-xl border-2 border-transparent bg-muted/30 p-4 text-left hover:bg-muted/50 hover:border-muted transition-all duration-200 group"
+          className="flex w-full items-center justify-between rounded-2xl border-2 border-transparent bg-muted/30 p-4 text-left hover:bg-muted/50 hover:border-accent/20 hover:shadow-soft transition-all duration-300 ease-out-back group"
         >
           <div className="flex items-center gap-3">
             <svg
@@ -165,7 +179,7 @@ function BreakdownSection({
               height="18"
               viewBox="0 0 18 18"
               fill="none"
-              className={`transition-transform duration-200 text-muted-foreground ${isOpen ? "rotate-90" : ""}`}
+              className={`transition-transform duration-300 ease-out-back text-muted-foreground group-hover:text-accent ${isOpen ? "rotate-90" : ""}`}
             >
               <path
                 d="M6.75 4.5L11.25 9L6.75 13.5"
@@ -175,9 +189,9 @@ function BreakdownSection({
                 strokeLinejoin="round"
               />
             </svg>
-            <span className="font-medium text-sm text-foreground">{title}</span>
+            <span className="font-semibold text-sm text-foreground">{title}</span>
             {issueCount > 0 && (
-              <Badge variant="secondary" className="text-xs bg-muted">
+              <Badge variant="secondary" className="text-xs bg-muted rounded-full px-2.5">
                 {issueCount} {issueCount === 1 ? "issue" : "issues"}
               </Badge>
             )}
@@ -188,7 +202,7 @@ function BreakdownSection({
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent className="animate-collapsible-down">
-        <div className="mt-3 space-y-3 pl-7">{children}</div>
+        <div className="mt-4 space-y-3 pl-7">{children}</div>
       </CollapsibleContent>
     </Collapsible>
   );
@@ -245,9 +259,9 @@ export function ATSScoreCard({ score }: ATSScoreCardProps) {
   const sectionIssues = score.issues.filter((i) => i.type === "section");
 
   return (
-    <Card className="overflow-hidden animate-fade-up">
-      {/* Header with gradient accent */}
-      <div className={`h-1.5 ${score.passed ? "bg-[hsl(var(--severity-success))]" : "bg-[hsl(var(--severity-critical))]"}`} />
+    <Card className="overflow-hidden animate-scale-bounce-in rounded-3xl">
+      {/* Header with gradient accent - bolder */}
+      <div className={`h-2 ${score.passed ? "bg-gradient-to-r from-emerald-500 to-emerald-400" : "bg-gradient-to-r from-red-500 to-red-400"}`} />
 
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
@@ -285,8 +299,8 @@ export function ATSScoreCard({ score }: ATSScoreCardProps) {
           <ScoreGauge score={score.overall} size={180} />
         </div>
 
-        {/* Sub-score Bars */}
-        <div className="space-y-4 p-4 rounded-xl bg-muted/20">
+        {/* Sub-score Bars - Bold container */}
+        <div className="space-y-5 p-5 rounded-2xl bg-muted/20 border border-muted/30">
           <ScoreBar score={score.keywordMatchPct} label="Keyword Match" />
           <ScoreBar score={score.formattingScore} label="Formatting" />
           <ScoreBar score={score.sectionScore} label="Section Structure" />

@@ -1,0 +1,45 @@
+EMILY RODRIGUEZ
+Seattle, WA | emily.rodriguez@email.com | (206) 555-0321
+LinkedIn: linkedin.com/in/emilyrodriguez
+
+PROFESSIONAL SUMMARY
+Strategic Product Manager with 8 years of experience launching B2B and B2C products generating $50M+ in annual revenue. Expert in agile methodologies, data-driven decision making, and cross-functional team leadership. Track record of 0-to-1 product launches and scaling products to millions of users.
+
+EXPERIENCE
+
+Senior Product Manager | CloudPlatform Inc. | Seattle, WA | 2021 - Present
+- Led product strategy for enterprise collaboration suite used by 2M+ daily active users
+- Launched 3 major features resulting in 40% increase in user engagement and $15M ARR growth
+- Managed product roadmap balancing customer requests, technical debt, and strategic initiatives
+- Conducted 100+ customer interviews and synthesized feedback into actionable product requirements
+- Collaborated with engineering team of 15 to deliver quarterly releases on time and within scope
+- Defined and tracked KPIs including NPS (improved from 32 to 58), retention, and feature adoption
+
+Product Manager | E-commerce Startup | San Francisco, CA | 2018 - 2021
+- Owned end-to-end product lifecycle for mobile shopping app with 500K monthly active users
+- Increased conversion rate by 35% through checkout flow optimization and A/B testing
+- Launched loyalty program driving 25% increase in repeat purchases
+- Wrote detailed PRDs and user stories for engineering team, reducing requirement ambiguity by 50%
+- Prioritized backlog using RICE framework, ensuring highest-impact features shipped first
+
+Associate Product Manager | Tech Giant Corp | Mountain View, CA | 2016 - 2018
+- Supported senior PM on search product features reaching 100M+ users globally
+- Analyzed user behavior data to identify pain points and opportunities
+- Coordinated beta launches with 10K+ users, gathering feedback and iterating
+
+EDUCATION
+Master of Business Administration | Stanford Graduate School of Business | 2016
+- Focus: Technology and Operations
+
+Bachelor of Science in Industrial Engineering | Georgia Tech | 2012
+- Honors Graduate
+
+SKILLS
+Product: Roadmap Planning, User Research, A/B Testing, Agile/Scrum, PRD Writing
+Analytics: Amplitude, Mixpanel, Google Analytics, SQL, Looker
+Tools: Jira, Confluence, Figma, Miro, Productboard
+Methodologies: Jobs-to-be-Done, Design Thinking, OKRs, RICE Prioritization
+
+CERTIFICATIONS
+- Certified Scrum Product Owner (CSPO)
+- Pragmatic Institute Certified Product Manager

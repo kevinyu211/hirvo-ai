@@ -576,3 +576,67 @@ function suggestionsToFeedback(
       : undefined,
   }));
 }
+
+// ============================================================================
+// Section Weights for Semantic Analysis (Layer 2/3)
+// Ported from older visa-resume-ai project — tested weights for embedding
+// similarity scoring.
+// ============================================================================
+
+/**
+ * Weights for different resume sections when calculating semantic similarity.
+ * Skills section is weighted highest as it's most directly relevant to job matching.
+ */
+export const SECTION_WEIGHTS = {
+  skills: 0.40,
+  experience: 0.35,
+  overall: 0.25, // summary, education, or general content
+} as const;
+
+export type SectionName = keyof typeof SECTION_WEIGHTS;
+
+export interface SectionScores {
+  skills?: number;
+  experience?: number;
+  summary?: number;
+  education?: number;
+  overall?: number;
+}
+
+/**
+ * Calculate a weighted semantic score from individual section similarity scores.
+ * This is used in Layer 2 (semantic analysis) to emphasize skills and experience
+ * over other sections.
+ *
+ * @param sectionScores - Similarity scores for each resume section (0-1 range)
+ * @returns Weighted composite score (0-1 range)
+ *
+ * @example
+ * const score = weightedSemanticScore({
+ *   skills: 0.85,      // 0.85 * 0.40 = 0.34
+ *   experience: 0.72,  // 0.72 * 0.35 = 0.252
+ *   summary: 0.65      // 0.65 * 0.25 = 0.1625
+ * });
+ * // Returns: 0.7545
+ */
+export function weightedSemanticScore(sectionScores: SectionScores): number {
+  // Use summary or education as the "overall" section if provided
+  const overallScore =
+    sectionScores.summary ??
+    sectionScores.education ??
+    sectionScores.overall ??
+    0;
+
+  return (
+    (sectionScores.skills ?? 0) * SECTION_WEIGHTS.skills +
+    (sectionScores.experience ?? 0) * SECTION_WEIGHTS.experience +
+    overallScore * SECTION_WEIGHTS.overall
+  );
+}
+
+/**
+ * Normalize section scores to 0-100 scale for display.
+ */
+export function normalizeSemanticScore(weightedScore: number): number {
+  return Math.round(Math.max(0, Math.min(1, weightedScore)) * 100);
+}

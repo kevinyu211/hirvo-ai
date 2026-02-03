@@ -1,5 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
-import { analyzeFormatting, fetchReferenceResumes } from "@/lib/hr-engine";
+import {
+  analyzeFormatting,
+  fetchReferenceResumes,
+  weightedSemanticScore,
+  normalizeSemanticScore,
+  SECTION_WEIGHTS,
+} from "@/lib/hr-engine";
 import type { FormattingPatterns } from "@/lib/formatting-patterns";
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -639,5 +645,69 @@ describe("fetchReferenceResumes", () => {
 
     const result = await fetchReferenceResumes(mockClient);
     expect(result).toEqual([]);
+  });
+});
+
+// ============================================================================
+// Section Weights (for semantic analysis layer)
+// ============================================================================
+describe("weightedSemanticScore", () => {
+  it("applies correct weights to section scores", () => {
+    const scores = {
+      skills: 0.80,
+      experience: 0.70,
+      summary: 0.60,
+    };
+
+    const result = weightedSemanticScore(scores);
+
+    // 0.80 * 0.40 + 0.70 * 0.35 + 0.60 * 0.25 = 0.32 + 0.245 + 0.15 = 0.715
+    expect(result).toBeCloseTo(0.715, 3);
+  });
+
+  it("handles missing section scores with defaults", () => {
+    const scores = {
+      skills: 0.90,
+    };
+
+    const result = weightedSemanticScore(scores);
+
+    // 0.90 * 0.40 + 0 * 0.35 + 0 * 0.25 = 0.36
+    expect(result).toBeCloseTo(0.36, 3);
+  });
+
+  it("uses summary or education as overall fallback", () => {
+    const withSummary = weightedSemanticScore({ skills: 0.8, experience: 0.7, summary: 0.5 });
+    const withEducation = weightedSemanticScore({ skills: 0.8, experience: 0.7, education: 0.5 });
+    const withOverall = weightedSemanticScore({ skills: 0.8, experience: 0.7, overall: 0.5 });
+
+    // All should produce the same result since summary/education/overall all map to the 0.25 weight
+    expect(withSummary).toBeCloseTo(withEducation, 5);
+    expect(withSummary).toBeCloseTo(withOverall, 5);
+  });
+
+  it("section weights sum to 1.0", () => {
+    const sum = SECTION_WEIGHTS.skills + SECTION_WEIGHTS.experience + SECTION_WEIGHTS.overall;
+    expect(sum).toBeCloseTo(1.0, 5);
+  });
+
+  it("skills has highest weight", () => {
+    expect(SECTION_WEIGHTS.skills).toBe(0.40);
+    expect(SECTION_WEIGHTS.skills).toBeGreaterThan(SECTION_WEIGHTS.experience);
+    expect(SECTION_WEIGHTS.skills).toBeGreaterThan(SECTION_WEIGHTS.overall);
+  });
+});
+
+describe("normalizeSemanticScore", () => {
+  it("converts 0-1 score to 0-100 scale", () => {
+    expect(normalizeSemanticScore(0.75)).toBe(75);
+    expect(normalizeSemanticScore(0.5)).toBe(50);
+    expect(normalizeSemanticScore(1.0)).toBe(100);
+    expect(normalizeSemanticScore(0.0)).toBe(0);
+  });
+
+  it("clamps values to valid range", () => {
+    expect(normalizeSemanticScore(1.5)).toBe(100);
+    expect(normalizeSemanticScore(-0.5)).toBe(0);
   });
 });

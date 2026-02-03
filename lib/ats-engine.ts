@@ -1,9 +1,96 @@
 import type { ATSScore, ATSIssue } from "@/lib/types";
 
 // ============================================================================
+// Job Type Detection & Dynamic Weight Profiles
+// Different job types emphasize different resume aspects
+// ============================================================================
+export type JobType = "tech" | "senior" | "entry" | "general";
+
+export const WEIGHT_PROFILES: Record<
+  JobType,
+  { keywords: number; formatting: number; sections: number }
+> = {
+  tech: { keywords: 0.45, formatting: 0.35, sections: 0.20 },
+  senior: { keywords: 0.50, formatting: 0.30, sections: 0.20 },
+  entry: { keywords: 0.35, formatting: 0.40, sections: 0.25 },
+  general: { keywords: 0.50, formatting: 0.25, sections: 0.25 }, // current default
+};
+
+// Signals for detecting job type from job description
+const TECH_SIGNALS = [
+  "engineer",
+  "developer",
+  "programming",
+  "software",
+  "backend",
+  "frontend",
+  "devops",
+  "data scientist",
+  "machine learning",
+  "full stack",
+  "fullstack",
+  "sre",
+  "infrastructure",
+  "platform",
+];
+
+const SENIOR_SIGNALS = [
+  "senior",
+  "lead",
+  "principal",
+  "staff",
+  "architect",
+  "director",
+  "manager",
+  "head of",
+  "vp ",
+  "vice president",
+  "10+ years",
+  "8+ years",
+  "7+ years",
+  "extensive experience",
+];
+
+const ENTRY_SIGNALS = [
+  "junior",
+  "entry",
+  "entry-level",
+  "intern",
+  "internship",
+  "graduate",
+  "new grad",
+  "associate",
+  "0-2 years",
+  "1-3 years",
+  "0-3 years",
+  "early career",
+  "no experience required",
+];
+
+/**
+ * Detect job type from job description text.
+ * Used to apply appropriate weight profiles for scoring.
+ */
+export function detectJobType(jobDescription: string): JobType {
+  const lower = jobDescription.toLowerCase();
+
+  const techScore = TECH_SIGNALS.filter((s) => lower.includes(s)).length;
+  const seniorScore = SENIOR_SIGNALS.filter((s) => lower.includes(s)).length;
+  const entryScore = ENTRY_SIGNALS.filter((s) => lower.includes(s)).length;
+
+  // Priority: senior > entry > tech > general
+  // Senior roles are often tech roles too, so check senior first
+  if (seniorScore >= 2) return "senior";
+  if (entryScore >= 2) return "entry";
+  if (techScore >= 2) return "tech";
+  return "general";
+}
+
+// ============================================================================
 // Stop Words — common words to exclude from keyword extraction
 // ============================================================================
 const STOP_WORDS = new Set([
+  // Common English words
   "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of",
   "with", "by", "from", "as", "is", "was", "are", "were", "be", "been",
   "being", "have", "has", "had", "do", "does", "did", "will", "would",
@@ -20,12 +107,40 @@ const STOP_WORDS = new Set([
   "around", "become", "within", "without", "work", "working", "including",
   "well", "using", "used", "use", "new", "make", "ensure", "based",
   "related", "per", "via", "etc", "e.g", "i.e",
+
   // Job posting filler words
   "experience", "role", "position", "team", "company", "opportunity",
   "responsibilities", "requirements", "qualifications", "candidate",
   "looking", "join", "apply", "ideal", "required", "preferred", "plus",
   "strong", "excellent", "proven", "ability", "skills", "knowledge",
   "understanding", "years", "minimum", "bachelor", "master", "degree",
+
+  // Location terms
+  "san", "francisco", "york", "los", "angeles", "chicago", "denver",
+  "seattle", "austin", "boston", "atlanta", "dallas", "houston", "remote",
+  "hybrid", "onsite", "on-site", "location", "located", "area",
+  "region", "city", "state", "headquarters", "hq", "office", "bay",
+  "california", "texas", "washington", "florida", "virginia", "colorado",
+  "massachusetts", "georgia", "illinois", "oregon", "arizona", "carolina",
+
+  // Compensation & benefits
+  "salary", "salaries", "equity", "compensation", "bonus", "bonuses",
+  "benefits", "perks", "package", "stock", "options", "rrsp", "401k",
+  "pension", "insurance", "health", "dental", "vision", "pto", "vacation",
+  "competitive", "range", "annual", "base", "total", "hourly", "pay",
+
+  // Job posting metadata
+  "posting", "posted", "applying", "application", "submit",
+  "deadline", "asap", "immediately", "urgent", "available", "seeking",
+  "hiring", "opportunities", "opening", "openings", "requisition",
+  "employment", "employer", "employee", "employees", "staff", "workforce",
+
+  // Generic fillers
+  "approximately", "circa", "includes", "similar",
+  "desired", "nice", "preparation", "assist", "support", "help",
+  "provide", "create", "develop", "implement", "maintain", "manage",
+  "build", "drive", "deliver", "execute", "lead", "partner", "collaborate",
+  "effectively", "efficiently", "successfully", "consistently", "regularly",
 ]);
 
 // ============================================================================
@@ -77,7 +192,8 @@ function tokenize(text: string): string[] {
     .replace(/[^a-z0-9\s\-\/\+\#]/g, " ")
     .split(/\s+/)
     .map((w) => w.replace(/^[-\/#+]+|[-\/#+]+$/g, "")) // strip leading/trailing special chars
-    .filter((w) => w.length > 1);
+    .filter((w) => w.length > 1)
+    .filter((w) => !/^\d+$/.test(w)); // filter pure numbers (e.g., salary figures like "145", "185")
 }
 
 // ============================================================================
@@ -197,7 +313,16 @@ export function extractKeywords(jobDescription: string): string[] {
 }
 
 // ============================================================================
-// matchKeywords — match JD keywords against resume text (exact + stemmed)
+// matchKeywords — match JD keywords against resume text
+//
+// STRICT MODE (default, mimics real ATS):
+//   - Exact word boundary matching only
+//   - No stemming, no fuzzy matching
+//   - This is how Workday, Greenhouse, Taleo, iCIMS actually work
+//
+// FUZZY MODE (for HR layer / semantic analysis):
+//   - Includes stemmed matching
+//   - More lenient, catches variations
 // ============================================================================
 export interface KeywordMatchResult {
   matched: string[];
@@ -205,23 +330,76 @@ export interface KeywordMatchResult {
   matchPct: number;
 }
 
+export interface MatchKeywordsOptions {
+  /** Use strict exact matching only (default: true for ATS accuracy) */
+  strictMode?: boolean;
+}
+
+/**
+ * Check if a keyword exists in resume text using exact word boundary matching.
+ * This mimics how real ATS systems work — they're simple pattern matchers.
+ */
+function matchKeywordExact(keyword: string, resumeText: string): boolean {
+  // Escape special regex characters
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Word boundary matching, case-insensitive
+  const regex = new RegExp(`\\b${escaped}\\b`, "i");
+  return regex.test(resumeText);
+}
+
+/**
+ * Check if a multi-word phrase exists in resume text.
+ * For phrases, we check if all words appear as exact matches.
+ */
+function matchPhraseExact(phrase: string, resumeText: string): boolean {
+  const words = phrase.split(/\s+/);
+  // For single words, use exact boundary matching
+  if (words.length === 1) {
+    return matchKeywordExact(phrase, resumeText);
+  }
+  // For phrases, check if the exact phrase appears
+  return matchKeywordExact(phrase, resumeText);
+}
+
+/**
+ * Match keywords against resume text.
+ *
+ * @param resumeText - The resume text to search in
+ * @param keywords - Keywords extracted from job description
+ * @param options - Matching options (strictMode defaults to true)
+ */
 export function matchKeywords(
   resumeText: string,
-  keywords: string[]
+  keywords: string[],
+  options: MatchKeywordsOptions = {}
 ): KeywordMatchResult {
+  const { strictMode = true } = options;
+
   if (keywords.length === 0) {
     return { matched: [], missing: [], matchPct: 100 };
   }
 
   const resumeLower = resumeText.toLowerCase();
-  const resumeTokens = tokenize(resumeText);
-  const resumeStemmed = new Set(resumeTokens.map(stem));
-
   const matched: string[] = [];
   const missing: string[] = [];
 
+  // For fuzzy mode, prepare stemmed tokens
+  const resumeTokens = strictMode ? [] : tokenize(resumeText);
+  const resumeStemmed = strictMode ? new Set<string>() : new Set(resumeTokens.map(stem));
+
   for (const keyword of keywords) {
-    // Check exact match (case-insensitive)
+    // STRICT MODE: Exact word boundary matching only
+    if (strictMode) {
+      if (matchPhraseExact(keyword, resumeText)) {
+        matched.push(keyword);
+      } else {
+        missing.push(keyword);
+      }
+      continue;
+    }
+
+    // FUZZY MODE: Original hybrid matching (for HR layer)
+    // Check exact match first (case-insensitive substring)
     if (resumeLower.includes(keyword.toLowerCase())) {
       matched.push(keyword);
       continue;
@@ -456,35 +634,43 @@ export function validateSections(resumeText: string): SectionValidationResult {
 
 // ============================================================================
 // computeATSScore — weighted overall ATS score
-// Keyword match (50%) + Formatting (25%) + Section structure (25%)
+// Weights are dynamic based on job type:
+//   - Tech: keywords 45%, formatting 35%, sections 20%
+//   - Senior: keywords 50%, formatting 30%, sections 20%
+//   - Entry: keywords 35%, formatting 40%, sections 25%
+//   - General: keywords 50%, formatting 25%, sections 25%
 // Pass threshold: 75
 // ============================================================================
+export interface ComputeATSScoreOptions {
+  /** Job type for dynamic weight selection */
+  jobType?: JobType;
+}
+
 export function computeATSScore(
   keywordResult: KeywordMatchResult,
   formattingResult: FormattingResult,
-  sectionResult: SectionValidationResult
+  sectionResult: SectionValidationResult,
+  options: ComputeATSScoreOptions = {}
 ): ATSScore {
+  const { jobType = "general" } = options;
+  const weights = WEIGHT_PROFILES[jobType];
+
   const keywordScore = keywordResult.matchPct;
   const formattingScore = formattingResult.score;
   const sectionScore = sectionResult.score;
 
-  // Weighted average: keyword 50%, formatting 25%, section 25%
+  // Dynamic weighted average based on job type
   const overall = Math.round(
-    keywordScore * 0.5 + formattingScore * 0.25 + sectionScore * 0.25
+    keywordScore * weights.keywords +
+    formattingScore * weights.formatting +
+    sectionScore * weights.sections
   );
 
   // Collect all issues
+  // NOTE: We no longer generate individual issues for each missing keyword.
+  // Missing keywords are tracked in missingKeywords[] and displayed in ThingsToAddSection.
+  // This prevents UI bloat (e.g., 30 missing keywords = 30 "critical" issues).
   const issues: ATSIssue[] = [...formattingResult.issues];
-
-  // Add missing keyword issues
-  for (const keyword of keywordResult.missing) {
-    issues.push({
-      type: "missing_keyword",
-      severity: "critical",
-      message: `Missing keyword: "${keyword}" — found in job description but not in your resume.`,
-      suggestion: `Add "${keyword}" to a relevant section of your resume, ideally in your skills or experience.`,
-    });
-  }
 
   // Add section validation issues
   for (const section of sectionResult.sections) {
@@ -513,14 +699,47 @@ export function computeATSScore(
 // ============================================================================
 // runATSAnalysis — convenience function that runs the full ATS pipeline
 // ============================================================================
+export interface ATSAnalysisOptions {
+  /** Page count from resume metadata */
+  pageCount?: number;
+  /** Use strict exact matching (default: true for ATS accuracy) */
+  strictMode?: boolean;
+  /** Override detected job type */
+  jobType?: JobType;
+}
+
+export interface ATSAnalysisResult extends ATSScore {
+  /** Detected or provided job type */
+  jobType: JobType;
+  /** Weights used for scoring */
+  weights: { keywords: number; formatting: number; sections: number };
+}
+
 export function runATSAnalysis(
   resumeText: string,
   jobDescription: string,
-  metadata?: { pageCount?: number }
-): ATSScore {
+  options: ATSAnalysisOptions = {}
+): ATSAnalysisResult {
+  const { pageCount, strictMode = true, jobType: providedJobType } = options;
+
+  // Detect job type from JD (or use provided override)
+  const jobType = providedJobType ?? detectJobType(jobDescription);
+  const weights = WEIGHT_PROFILES[jobType];
+
+  // Extract keywords and match against resume
   const keywords = extractKeywords(jobDescription);
-  const keywordResult = matchKeywords(resumeText, keywords);
-  const formattingResult = checkFormatting(resumeText, metadata);
+  const keywordResult = matchKeywords(resumeText, keywords, { strictMode });
+
+  // Check formatting and sections
+  const formattingResult = checkFormatting(resumeText, { pageCount });
   const sectionResult = validateSections(resumeText);
-  return computeATSScore(keywordResult, formattingResult, sectionResult);
+
+  // Compute score with dynamic weights
+  const score = computeATSScore(keywordResult, formattingResult, sectionResult, { jobType });
+
+  return {
+    ...score,
+    jobType,
+    weights,
+  };
 }

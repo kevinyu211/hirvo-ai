@@ -46,8 +46,9 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-up delay-300">
                 <Link href="/signup">
                   <Button
-                    size="lg"
-                    className="gradient-emerald text-white text-lg px-8 py-6 h-auto shadow-soft-lg hover:shadow-glow-lg transition-all duration-300 border-0 min-w-[200px]"
+                    variant="accent"
+                    size="xl"
+                    className="text-lg px-10 py-6 h-auto min-w-[220px]"
                   >
                     Analyze My Resume
                     <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -58,8 +59,8 @@ export default function Home() {
                 <Link href="/login">
                   <Button
                     variant="outline"
-                    size="lg"
-                    className="text-lg px-8 py-6 h-auto border-2 hover:border-accent hover:bg-accent/5 transition-all duration-300 min-w-[200px]"
+                    size="xl"
+                    className="text-lg px-10 py-6 h-auto border-2 hover:border-accent hover:bg-accent/5 transition-all duration-300 min-w-[220px]"
                   >
                     Sign In
                   </Button>
@@ -275,7 +276,7 @@ export default function Home() {
                   ))}
                 </ul>
                 <Link href="/signup">
-                  <Button className="gradient-emerald text-white shadow-soft hover:shadow-glow transition-all duration-300 border-0">
+                  <Button variant="accent" size="lg">
                     Try the Editor Free
                     <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -364,8 +365,8 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up delay-200">
               <Link href="/signup">
                 <Button
-                  size="lg"
-                  className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 h-auto shadow-soft-lg transition-all duration-300 min-w-[200px]"
+                  size="xl"
+                  className="bg-white text-emerald-600 hover:bg-white/95 text-lg px-10 py-6 h-auto shadow-float hover:shadow-float-lg hover:-translate-y-1 transition-all duration-300 ease-out-back min-w-[220px] font-bold"
                 >
                   Get Started Free
                 </Button>

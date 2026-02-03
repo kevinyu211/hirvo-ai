@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { ResultsSidebar } from "./ResultsSidebar";
-import { MobileSidebar } from "./MobileSidebar";
-import type { ATSScore, HRScore, Suggestion } from "@/lib/types";
+import { useCallback, useEffect, useState } from "react";
+import { ScoreSummaryHeader } from "@/components/section-feedback";
+import type { ATSScore, HRScore, Suggestion, MergedSectionFeedback } from "@/lib/types";
 import type { HRLayerData } from "@/components/scores/HRScoreCard";
 import type { ViewMode } from "@/components/editor/ViewToggle";
+import type { LearnedPatterns } from "@/lib/success-matching";
 
 export interface ResultsLayoutProps {
   activeView: ViewMode;
@@ -19,8 +18,22 @@ export interface ResultsLayoutProps {
   onDismiss: (suggestion: Suggestion) => void;
   onViewSuggestion: (suggestion: Suggestion) => void;
   children: React.ReactNode;
+  jobDescription?: string;
+  /** Merged section-level feedback for passing to editor */
+  sectionFeedback?: Map<string, MergedSectionFeedback>;
+  /** Learned patterns from similar successful resumes */
+  learnedPatterns?: LearnedPatterns | null;
+  /** Number of similar jobs found in database */
+  similarJobsCount?: number;
 }
 
+/**
+ * ResultsLayout - Simplified single-column layout
+ *
+ * Removed left sidebar and right panel.
+ * Score summary header is now at the top.
+ * Section-level feedback is integrated into the editor sections.
+ */
 export function ResultsLayout({
   activeView,
   onViewChange,
@@ -32,64 +45,25 @@ export function ResultsLayout({
   onDismiss,
   onViewSuggestion,
   children,
+  jobDescription,
+  sectionFeedback,
+  learnedPatterns,
+  similarJobsCount = 0,
 }: ResultsLayoutProps) {
-  const [isDesktop, setIsDesktop] = useState(true);
-
-  // Check viewport size
-  useEffect(() => {
-    const checkViewport = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-
-    checkViewport();
-    window.addEventListener("resize", checkViewport);
-    return () => window.removeEventListener("resize", checkViewport);
-  }, []);
-
-  // Calculate suggestion count for mobile FAB
-  const suggestionCount = suggestions.filter(
-    (s) => s.type === activeView && s.suggestedText !== s.originalText
-  ).length;
-
   return (
-    <div className="flex gap-6">
-      {/* Desktop Sidebar */}
-      {isDesktop && (
-        <aside className="w-[380px] flex-shrink-0 hidden lg:block">
-          <Card className="sticky top-24 h-[calc(100vh-120px)] overflow-hidden">
-            <ResultsSidebar
-              activeView={activeView}
-              onViewChange={onViewChange}
-              atsScore={atsScore}
-              hrScore={hrScore}
-              hrLayers={hrLayers}
-              suggestions={suggestions}
-              onApplyFix={onApplyFix}
-              onDismiss={onDismiss}
-              onViewSuggestion={onViewSuggestion}
-            />
-          </Card>
-        </aside>
-      )}
+    <div className="w-full results-container mx-auto">
+      {/* Score Summary Header */}
+      <ScoreSummaryHeader
+        atsScore={atsScore}
+        hrScore={hrScore}
+        learnedPatterns={learnedPatterns}
+        similarJobsCount={similarJobsCount}
+      />
 
-      {/* Main Content */}
-      <main className="flex-1 min-w-0">{children}</main>
-
-      {/* Mobile Sidebar (FAB + Bottom Sheet) */}
-      {!isDesktop && (
-        <MobileSidebar
-          activeView={activeView}
-          onViewChange={onViewChange}
-          atsScore={atsScore}
-          hrScore={hrScore}
-          hrLayers={hrLayers}
-          suggestions={suggestions}
-          onApplyFix={onApplyFix}
-          onDismiss={onDismiss}
-          onViewSuggestion={onViewSuggestion}
-          suggestionCount={suggestionCount}
-        />
-      )}
+      {/* Main Content (Editor + Template Gallery) */}
+      <main className="space-y-6">
+        {children}
+      </main>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { runATSAnalysis } from "@/lib/ats-engine";
+import { runATSAnalysis, type ATSAnalysisResult, WEIGHT_PROFILES } from "@/lib/ats-engine";
 import { runSupplementaryATSAnalysis } from "@/lib/prompts/ats-prompts";
 import type { ATSScore, ATSIssue } from "@/lib/types";
 
@@ -58,11 +58,14 @@ export async function POST(request: NextRequest) {
   const { resumeText, jobDescription, metadata, analysisId } = parsed.data;
 
   try {
-    // Step 1: Run deterministic ATS engine
+    // Step 1: Run deterministic ATS engine with strict exact matching
     const deterministicScore = runATSAnalysis(
       resumeText,
       jobDescription,
-      metadata
+      {
+        pageCount: metadata?.pageCount,
+        strictMode: true, // Use exact matching to mimic real ATS behavior
+      }
     );
 
     // Step 2: Run supplementary GPT-4o analysis
@@ -129,11 +132,11 @@ export async function POST(request: NextRequest) {
  * and adds supplementary issues to the issues list.
  */
 function combineATSResults(
-  deterministic: ATSScore,
+  deterministic: ATSAnalysisResult,
   supplementary: Awaited<
     ReturnType<typeof runSupplementaryATSAnalysis>
   > | null
-): ATSScore {
+): ATSAnalysisResult {
   if (!supplementary) {
     return deterministic;
   }
@@ -161,11 +164,12 @@ function combineATSResults(
       ? Math.round((updatedMatched.length / totalKeywords) * 100)
       : 100;
 
-  // Recalculate overall score with updated keyword percentage
+  // Recalculate overall score with updated keyword percentage using dynamic weights
+  const { weights } = deterministic;
   const updatedOverall = Math.round(
-    updatedMatchPct * 0.5 +
-      deterministic.formattingScore * 0.25 +
-      deterministic.sectionScore * 0.25
+    updatedMatchPct * weights.keywords +
+      deterministic.formattingScore * weights.formatting +
+      deterministic.sectionScore * weights.sections
   );
 
   // Build combined issues list
@@ -211,5 +215,7 @@ function combineATSResults(
     missingKeywords: updatedMissing,
     issues: filteredIssues,
     passed: updatedOverall >= 75,
+    jobType: deterministic.jobType,
+    weights: deterministic.weights,
   };
 }

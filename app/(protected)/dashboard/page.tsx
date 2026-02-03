@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, FileText, Calendar, ArrowRight, MessageSquare, Video, Sparkles } from "lucide-react";
+import { FileText, Calendar, ArrowRight, MessageSquare, Video, Sparkles } from "lucide-react";
 import type { Database } from "@/lib/database.types";
 import { DashboardHeader } from "@/components/shared/DashboardHeader";
 
@@ -68,41 +68,41 @@ export default async function DashboardPage() {
             </div>
 
             {(!analyses || analyses.length === 0) ? (
-              <Card className="border-dashed border-2 bg-card/50">
-                <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
-                    <FileText className="h-8 w-8 text-accent" />
+              <Card className="border-dashed border-2 bg-card/50 rounded-3xl">
+                <CardContent className="flex flex-col items-center justify-center py-20 px-8 text-center">
+                  <div className="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center mb-8 shadow-soft">
+                    <FileText className="h-10 w-10 text-accent" />
                   </div>
-                  <h3 className="font-display text-xl font-semibold text-foreground mb-2">
+                  <h3 className="font-display text-2xl font-semibold text-foreground mb-3">
                     No analyses yet
                   </h3>
-                  <p className="text-muted-foreground mb-8 max-w-sm">
+                  <p className="text-muted-foreground mb-10 max-w-sm text-base">
                     Upload your resume and a job description to get AI-powered insights
                     for beating ATS filters and impressing recruiters.
                   </p>
                   <Link href="/analyze">
-                    <Button className="gap-2 gradient-emerald text-white border-0 shadow-soft hover:shadow-glow transition-all">
-                      <Sparkles className="h-4 w-4" />
+                    <Button className="gap-2.5 gradient-emerald text-white border-0 shadow-glow-emerald hover:shadow-glow-emerald-lg transition-all duration-300 ease-out-back hover:-translate-y-0.5 px-8 py-3 text-base">
+                      <Sparkles className="h-5 w-5" />
                       Create your first analysis
                     </Button>
                   </Link>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {analyses.map((analysis, index) => (
                   <Card
                     key={analysis.id}
-                    className="group card-interactive animate-fade-up"
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className="group card-interactive animate-scale-bounce-in rounded-2xl"
+                    style={{ animationDelay: `${index * 75}ms` }}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start gap-3">
-                        <CardTitle className="text-base leading-tight line-clamp-2 group-hover:text-accent transition-colors">
+                        <CardTitle className="text-base leading-tight line-clamp-2 group-hover:text-accent transition-colors duration-300">
                           {analysis.target_role || "Untitled Role"}
                         </CardTitle>
                         {analysis.ats_overall_score !== null && (
-                          <Badge className={getScoreBadgeClass(analysis.ats_overall_score ?? 0)}>
+                          <Badge className={`${getScoreBadgeClass(analysis.ats_overall_score ?? 0)} shadow-sm`}>
                             {analysis.ats_overall_score}
                           </Badge>
                         )}
@@ -112,7 +112,7 @@ export default async function DashboardPage() {
                       </p>
                     </CardHeader>
                     <CardContent className="flex-1 pb-3">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
                         <Calendar className="h-3.5 w-3.5" />
                         {new Date(analysis.created_at).toLocaleDateString("en-US", {
                           month: "short",
@@ -120,30 +120,30 @@ export default async function DashboardPage() {
                           year: "numeric"
                         })}
                       </div>
-                      <div className="flex gap-2 flex-wrap">
+                      <div className="flex gap-3 flex-wrap">
                         {analysis.ats_overall_score !== null && (
-                          <div className="flex items-center gap-1.5 text-xs">
+                          <div className="flex items-center gap-1.5 text-sm bg-muted/30 rounded-full px-3 py-1">
                             <span className="text-muted-foreground">ATS:</span>
-                            <span className={`font-semibold ${getScoreTextClass(analysis.ats_overall_score ?? 0)}`}>
+                            <span className={`font-bold ${getScoreTextClass(analysis.ats_overall_score ?? 0)}`}>
                               {analysis.ats_overall_score}%
                             </span>
                           </div>
                         )}
                         {analysis.hr_overall_score !== null && (
-                          <div className="flex items-center gap-1.5 text-xs">
+                          <div className="flex items-center gap-1.5 text-sm bg-muted/30 rounded-full px-3 py-1">
                             <span className="text-muted-foreground">HR:</span>
-                            <span className={`font-semibold ${getScoreTextClass(analysis.hr_overall_score ?? 0)}`}>
+                            <span className={`font-bold ${getScoreTextClass(analysis.hr_overall_score ?? 0)}`}>
                               {analysis.hr_overall_score}%
                             </span>
                           </div>
                         )}
                       </div>
                     </CardContent>
-                    <CardFooter className="pt-3 border-t">
+                    <CardFooter className="pt-4 border-t">
                       <Link href={`/results/${analysis.id}`} className="w-full">
-                        <Button variant="ghost" className="w-full justify-between group/btn hover:bg-accent/5">
-                          <span>View Results</span>
-                          <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                        <Button variant="accent" className="w-full justify-between group/btn rounded-xl">
+                          <span className="font-semibold">View Results</span>
+                          <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1.5 transition-transform duration-300" />
                         </Button>
                       </Link>
                     </CardFooter>
@@ -167,34 +167,34 @@ export default async function DashboardPage() {
             </div>
 
             {(!sessions || sessions.length === 0) ? (
-              <Card className="border-dashed border-2 bg-card/50">
-                <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                  <div className="w-16 h-16 rounded-2xl icon-violet border flex items-center justify-center mb-6">
-                    <Video className="h-8 w-8" />
+              <Card className="border-dashed border-2 bg-card/50 rounded-3xl">
+                <CardContent className="flex flex-col items-center justify-center py-20 px-8 text-center">
+                  <div className="w-20 h-20 rounded-3xl icon-violet border-2 flex items-center justify-center mb-8 shadow-soft">
+                    <Video className="h-10 w-10" />
                   </div>
-                  <h3 className="font-display text-xl font-semibold text-foreground mb-2">
+                  <h3 className="font-display text-2xl font-semibold text-foreground mb-3">
                     No interview sessions yet
                   </h3>
-                  <p className="text-muted-foreground mb-4 max-w-sm">
+                  <p className="text-muted-foreground mb-6 max-w-sm text-base">
                     Complete a resume analysis to unlock AI-powered interview
                     preparation with our live avatar.
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {sessions.map((session, index) => (
                   <Card
                     key={session.id}
-                    className="group card-interactive animate-fade-up"
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className="group card-interactive animate-scale-bounce-in rounded-2xl"
+                    style={{ animationDelay: `${index * 75}ms` }}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start gap-3">
-                        <CardTitle className="text-base leading-tight group-hover:text-accent transition-colors">
+                        <CardTitle className="text-base leading-tight group-hover:text-accent transition-colors duration-300">
                           {getSessionTypeLabel(session.session_type)}
                         </CardTitle>
-                        <Badge className={getSessionTypeBadgeClass(session.session_type)}>
+                        <Badge className={`${getSessionTypeBadgeClass(session.session_type)} shadow-sm`}>
                           {session.session_type === "visa_qa" ? "Visa" : "Interview"}
                         </Badge>
                       </div>
@@ -213,23 +213,23 @@ export default async function DashboardPage() {
                         {getTranscriptLength(session.transcript)} messages
                       </div>
                       {session.feedback && session.session_type === "hr_interview" && (
-                        <div className="mt-3">
-                          <Badge variant="outline" className="text-xs font-medium severity-success border">
+                        <div className="mt-4">
+                          <Badge variant="outline" className="text-xs font-bold severity-success border-2 shadow-sm">
                             Score: {getFeedbackScore(session.feedback)}
                           </Badge>
                         </div>
                       )}
                     </CardContent>
-                    <CardFooter className="pt-3 border-t">
+                    <CardFooter className="pt-4 border-t">
                       {session.analysis_id ? (
                         <Link href={`/interview/${session.analysis_id}`} className="w-full">
-                          <Button variant="ghost" className="w-full justify-between group/btn hover:bg-accent/5">
-                            <span>View Transcript</span>
-                            <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                          <Button variant="accent" className="w-full justify-between group/btn rounded-xl">
+                            <span className="font-semibold">View Transcript</span>
+                            <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1.5 transition-transform duration-300" />
                           </Button>
                         </Link>
                       ) : (
-                        <Button variant="ghost" className="w-full justify-between opacity-50" disabled>
+                        <Button variant="outline" className="w-full justify-between opacity-50 rounded-xl" disabled>
                           No linked analysis
                         </Button>
                       )}

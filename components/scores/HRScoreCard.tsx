@@ -19,31 +19,43 @@ import {
 } from "@/components/ui/tooltip";
 
 // ============================================================================
-// Score Gauge — circular SVG gauge with animated draw effect
+// Score Gauge — circular SVG gauge with animated draw effect + bold styling
 // ============================================================================
 function ScoreGauge({ score, size = 160 }: { score: number; size?: number }) {
   const radius = (size - 20) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = circumference - (score / 100) * circumference;
-  const strokeWidth = 12;
+  const strokeWidth = 14;
 
   // Color based on score - theme-aware
   const getColorClass = (score: number) => {
-    if (score >= 75) return { stroke: "stroke-[hsl(var(--severity-success))]", text: "text-[hsl(var(--severity-success))]", bg: "bg-[hsl(var(--severity-success))]" };
-    if (score >= 50) return { stroke: "stroke-[hsl(var(--severity-warning))]", text: "text-[hsl(var(--severity-warning))]", bg: "bg-[hsl(var(--severity-warning))]" };
-    return { stroke: "stroke-[hsl(var(--severity-critical))]", text: "text-[hsl(var(--severity-critical))]", bg: "bg-[hsl(var(--severity-critical))]" };
+    if (score >= 75) return { stroke: "stroke-[hsl(var(--severity-success))]", text: "text-[hsl(var(--severity-success))]", bg: "bg-[hsl(var(--severity-success))]", glow: true };
+    if (score >= 50) return { stroke: "stroke-[hsl(var(--severity-warning))]", text: "text-[hsl(var(--severity-warning))]", bg: "bg-[hsl(var(--severity-warning))]", glow: false };
+    return { stroke: "stroke-[hsl(var(--severity-critical))]", text: "text-[hsl(var(--severity-critical))]", bg: "bg-[hsl(var(--severity-critical))]", glow: false };
   };
 
   const colors = getColorClass(score);
+  const isExcellent = score >= 85;
+  const containerClass = isExcellent
+    ? "relative inline-flex items-center justify-center rounded-full score-excellent p-2"
+    : "relative inline-flex items-center justify-center";
 
   return (
-    <div className="relative inline-flex items-center justify-center">
+    <div className={containerClass}>
       <svg
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         className="-rotate-90"
       >
+        {/* Gradient definition */}
+        <defs>
+          <linearGradient id={`hrGradient-${size}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="hsl(158 64% 50%)" />
+            <stop offset="100%" stopColor="hsl(158 64% 35%)" />
+          </linearGradient>
+        </defs>
+
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -51,7 +63,7 @@ function ScoreGauge({ score, size = 160 }: { score: number; size?: number }) {
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-muted/30"
+          className="text-muted/20"
         />
         <circle
           cx={size / 2}
@@ -62,31 +74,33 @@ function ScoreGauge({ score, size = 160 }: { score: number; size?: number }) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={progress}
-          className={`${colors.stroke} score-gauge-circle`}
+          stroke={score >= 75 ? `url(#hrGradient-${size})` : undefined}
+          className={`${score < 75 ? colors.stroke : ''} score-gauge-circle`}
           style={{
             "--circumference": circumference,
             "--progress": progress,
+            filter: colors.glow ? "drop-shadow(0 0 8px hsl(158 64% 40% / 0.4))" : undefined,
           } as React.CSSProperties}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center score-gauge-text">
-        <span className={`text-3xl md:text-4xl font-display font-bold ${colors.text}`}>
+        <span className={`text-4xl md:text-5xl font-display font-bold ${colors.text} tracking-tight`}>
           {Math.round(score)}
         </span>
-        <span className="text-xs text-muted-foreground font-medium">out of 100</span>
+        <span className="text-xs text-muted-foreground font-medium tracking-wide uppercase">out of 100</span>
       </div>
     </div>
   );
 }
 
 // ============================================================================
-// Score Bar — horizontal bar for sub-scores
+// Score Bar — horizontal bar for sub-scores - Bold styling
 // ============================================================================
 function ScoreBar({ score, label }: { score: number; label: string }) {
   const getColorClass = (score: number) => {
-    if (score >= 75) return "bg-[hsl(var(--severity-success))]";
-    if (score >= 50) return "bg-[hsl(var(--severity-warning))]";
-    return "bg-[hsl(var(--severity-critical))]";
+    if (score >= 75) return "bg-gradient-to-r from-emerald-500 to-emerald-400";
+    if (score >= 50) return "bg-gradient-to-r from-amber-500 to-amber-400";
+    return "bg-gradient-to-r from-red-500 to-red-400";
   };
 
   const getTextColorClass = (score: number) => {
@@ -96,16 +110,16 @@ function ScoreBar({ score, label }: { score: number; label: string }) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground font-medium">{label}</span>
-        <span className={`font-semibold ${getTextColorClass(score)}`}>
+        <span className={`font-bold ${getTextColorClass(score)}`}>
           {Math.round(score)}%
         </span>
       </div>
-      <div className="h-2.5 w-full rounded-full bg-muted/50 overflow-hidden">
+      <div className="h-3 w-full rounded-full bg-muted/30 overflow-hidden">
         <div
-          className={`h-full rounded-full ${getColorClass(score)} transition-all duration-700 ease-out`}
+          className={`h-full rounded-full ${getColorClass(score)} transition-all duration-700 ease-out shadow-sm`}
           style={{ width: `${Math.min(Math.round(score), 100)}%` }}
         />
       </div>

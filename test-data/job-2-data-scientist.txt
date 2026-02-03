@@ -1,0 +1,38 @@
+Senior Data Scientist - Machine Learning
+
+AI Financial Services | New York, NY
+$175,000 - $220,000 + Equity
+
+About the Role:
+Join our Data Science team to build cutting-edge ML models for fraud detection, risk assessment, and customer analytics. You'll work with petabytes of financial data to create models that directly impact our bottom line.
+
+Responsibilities:
+- Design and implement machine learning models for fraud detection and prevention
+- Build recommendation systems and personalization engines
+- Develop NLP solutions for document processing and customer insights
+- Create and maintain ML pipelines for model training and deployment
+- Collaborate with engineering to productionize models at scale
+- Present findings to stakeholders and translate technical concepts for business audiences
+- Mentor junior data scientists and contribute to team growth
+
+Requirements:
+- MS or PhD in Computer Science, Statistics, or related quantitative field
+- 4+ years of industry experience as a Data Scientist
+- Expert proficiency in Python and SQL
+- Strong experience with ML frameworks (TensorFlow, PyTorch, scikit-learn)
+- Experience with NLP, recommendation systems, or time series analysis
+- Familiarity with big data technologies (Spark, Hadoop)
+- Experience deploying models to production (MLflow, Kubeflow)
+- Strong communication and presentation skills
+
+Nice to Have:
+- Publications in top ML conferences (NeurIPS, ICML, KDD)
+- Experience in financial services or fintech
+- Knowledge of MLOps best practices
+
+Benefits:
+- Competitive compensation + equity
+- Unlimited PTO
+- $10,000 annual learning budget
+- Top-tier health benefits
+- Hybrid work environment

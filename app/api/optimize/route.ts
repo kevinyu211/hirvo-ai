@@ -5,7 +5,6 @@ import { runOptimizationAnalysis } from "@/lib/prompts/optimization-prompts";
 import { extractContentPatterns } from "@/lib/content-patterns";
 import { getLearnedInsightsForResume } from "@/lib/success-matching";
 import {
-  analyzeContrastivePatterns,
   contrastiveInsightsToSuggestions,
 } from "@/lib/contrastive-analysis";
 import type { ATSIssue, HRFeedback, Suggestion } from "@/lib/types";

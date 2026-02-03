@@ -255,7 +255,8 @@ export function SignupForm() {
 
         <Button
           type="submit"
-          className="w-full h-12 text-base gradient-emerald text-white border-0 shadow-soft hover:shadow-glow transition-all"
+          variant="accent"
+          className="w-full h-12 text-base shadow-glow-emerald hover:shadow-glow-emerald-lg transition-all duration-300 ease-out-back"
           disabled={loading}
         >
           {loading ? (

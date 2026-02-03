@@ -81,6 +81,8 @@ const sampleATSScore = {
     },
   ],
   passed: false,
+  jobType: "general" as const,
+  weights: { keywords: 0.50, formatting: 0.25, sections: 0.25 },
 };
 
 const sampleSupplementary = {
@@ -212,7 +214,9 @@ describe("POST /api/ats-score", () => {
       expect(mockedRunATSAnalysis).toHaveBeenCalledWith(
         "My resume text",
         "Looking for a Python developer",
-        undefined
+        expect.objectContaining({
+          strictMode: true,
+        })
       );
     });
 
@@ -228,7 +232,10 @@ describe("POST /api/ats-score", () => {
       expect(mockedRunATSAnalysis).toHaveBeenCalledWith(
         "My resume text",
         "A job",
-        { pageCount: 2 }
+        expect.objectContaining({
+          pageCount: 2,
+          strictMode: true,
+        })
       );
     });
 

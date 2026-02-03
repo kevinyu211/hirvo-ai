@@ -19,13 +19,19 @@ import {
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
+import type { StructuredResume, ResumeFormatId } from "@/lib/types";
+import { generateExport } from "@/lib/templates";
+import { fitToOnePage } from "@/lib/templates/one-page-fitter";
 
 const exportRequestSchema = z.object({
-  text: z.string().min(1, "Resume text is required"),
+  text: z.string().min(1, "Resume text is required").optional(),
   format: z.enum(["pdf", "docx"], {
     error: 'Format must be "pdf" or "docx"',
   }),
   analysisId: z.string().uuid("Invalid analysis ID").optional(),
+  templateId: z.enum(["classic", "modern", "minimalist", "technical", "executive"]).optional(),
+  structuredResume: z.any().optional(), // StructuredResume object for template-based export
+  enforceOnePage: z.boolean().optional().default(true), // Fit content to one page
 });
 
 /**
@@ -402,26 +408,87 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { text, format, analysisId } = parsed.data;
+  const { text, format, analysisId, templateId, structuredResume, enforceOnePage } = parsed.data;
 
   try {
     let buffer: Buffer;
     let contentType: string;
     let fileName: string;
 
-    if (format === "docx") {
-      buffer = await generateDOCX(text);
+    // Check if using template-based export (structured resume + templateId)
+    if (structuredResume && templateId) {
+      // Validate structured resume has required fields
+      if (!structuredResume.contact || !structuredResume.contact.fullName) {
+        return NextResponse.json(
+          { error: "Invalid structured resume: contact.fullName is required" },
+          { status: 400 }
+        );
+      }
+
+      // Apply one-page fitting if requested
+      let resumeToExport = structuredResume as StructuredResume;
+      if (enforceOnePage) {
+        const fitResult = fitToOnePage(resumeToExport, templateId as ResumeFormatId);
+        resumeToExport = fitResult.fittedResume;
+
+        // Log what was removed for debugging
+        if (fitResult.removedContent.length > 0) {
+          console.log(
+            `One-page fit removed: ${fitResult.removedContent.join(", ")} (confidence: ${fitResult.fitConfidence}%)`
+          );
+        }
+      }
+
+      // Use template system for generation
+      buffer = await generateExport(
+        resumeToExport,
+        format,
+        templateId as ResumeFormatId
+      );
+
       contentType =
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-      fileName = "resume.docx";
+        format === "docx"
+          ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          : "application/pdf";
+      fileName = `resume-${templateId}.${format}`;
+
+      // Save selected format to database if analysisId provided
+      if (analysisId) {
+        try {
+          // Use type assertion since columns are added via migration
+          await supabase
+            .from("resume_analyses")
+            .update({
+              selected_format: templateId,
+              structured_content: structuredResume,
+            } as Record<string, unknown>)
+            .eq("id", analysisId)
+            .eq("user_id", user.id);
+        } catch {
+          console.error("Failed to save template selection to database");
+        }
+      }
+    } else if (text) {
+      // Legacy text-based export (backward compatible)
+      if (format === "docx") {
+        buffer = await generateDOCX(text);
+        contentType =
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        fileName = "resume.docx";
+      } else {
+        buffer = await generatePDF(text);
+        contentType = "application/pdf";
+        fileName = "resume.pdf";
+      }
     } else {
-      buffer = await generatePDF(text);
-      contentType = "application/pdf";
-      fileName = "resume.pdf";
+      return NextResponse.json(
+        { error: "Either text or structuredResume with templateId is required" },
+        { status: 400 }
+      );
     }
 
-    // Save export event to database if analysisId provided
-    if (analysisId) {
+    // Save export event to database if analysisId provided (for text-based export)
+    if (analysisId && text && !structuredResume) {
       try {
         await supabase
           .from("resume_analyses")

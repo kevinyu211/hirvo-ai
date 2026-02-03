@@ -1,0 +1,46 @@
+PRIYA SHARMA
+New York, NY | priya.sharma@email.com | (212) 555-0789
+LinkedIn: linkedin.com/in/priyasharma | GitHub: github.com/priyasharma
+
+PROFESSIONAL SUMMARY
+Data Scientist with 5 years of experience building machine learning models and data pipelines for Fortune 500 companies. Specialized in NLP, recommendation systems, and predictive analytics. Published researcher with 3 papers in top-tier ML conferences.
+
+EXPERIENCE
+
+Senior Data Scientist | FinanceAI Corp | New York, NY | 2022 - Present
+- Built fraud detection model using XGBoost and deep learning, reducing false positives by 40% and saving $12M annually
+- Developed customer churn prediction system with 92% accuracy, enabling proactive retention campaigns
+- Led team of 3 data scientists on NLP project extracting insights from 10M+ customer support tickets
+- Implemented MLOps pipeline using MLflow and Kubeflow, reducing model deployment time from 2 weeks to 2 days
+- Presented technical findings to C-suite executives, translating complex ML concepts into business recommendations
+
+Data Scientist | RetailTech Solutions | New York, NY | 2020 - 2022
+- Created product recommendation engine increasing cross-sell revenue by 25% ($8M annual impact)
+- Built demand forecasting model reducing inventory costs by 15% across 500+ SKUs
+- Developed A/B testing framework used by product team for 50+ experiments quarterly
+- Automated data quality monitoring, reducing data pipeline incidents by 60%
+
+Junior Data Scientist | Analytics Startup | Boston, MA | 2019 - 2020
+- Performed exploratory data analysis on 50GB+ datasets using Python and SQL
+- Built customer segmentation models using K-means clustering and RFM analysis
+- Created interactive dashboards in Tableau for executive reporting
+
+EDUCATION
+Master of Science in Data Science | Columbia University | 2019
+- GPA: 3.9/4.0
+- Thesis: "Deep Learning Approaches for Financial Time Series Prediction"
+
+Bachelor of Science in Statistics | Boston University | 2017
+- Magna Cum Laude
+
+SKILLS
+Languages: Python, R, SQL, Scala
+ML/AI: TensorFlow, PyTorch, scikit-learn, XGBoost, Hugging Face
+Data: Spark, Hadoop, Airflow, dbt, Snowflake
+Tools: MLflow, Kubeflow, Docker, Git, Jupyter
+Techniques: NLP, Computer Vision, Time Series, Recommendation Systems
+
+PUBLICATIONS
+- "Transformer-based Fraud Detection in Financial Transactions" - NeurIPS 2023
+- "Efficient Feature Engineering for High-Cardinality Data" - KDD 2022
+- "Multi-Task Learning for Customer Lifetime Value Prediction" - ICML 2021

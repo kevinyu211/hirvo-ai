@@ -20,16 +20,29 @@ import {
   Shield,
   LayoutDashboard,
   ChevronDown,
+  Save,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 interface ResultsHeaderProps {
   children?: React.ReactNode; // For action buttons like Re-analyze, Export
+  onSave?: () => Promise<void>; // Save handler
+  saveStatus?: SaveStatus; // Current save status
+  hasUnsavedChanges?: boolean; // Whether there are unsaved changes
 }
 
-export function ResultsHeader({ children }: ResultsHeaderProps) {
+export function ResultsHeader({
+  children,
+  onSave,
+  saveStatus = "idle",
+  hasUnsavedChanges = false,
+}: ResultsHeaderProps) {
   const router = useRouter();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -104,7 +117,37 @@ export function ResultsHeader({ children }: ResultsHeaderProps) {
           </div>
 
           {/* Separator */}
-          {children && <div className="hidden lg:block h-6 w-px bg-border" />}
+          {(children || onSave) && <div className="hidden lg:block h-6 w-px bg-border" />}
+
+          {/* Save Button */}
+          {onSave && (
+            <Button
+              variant={hasUnsavedChanges ? "default" : "outline"}
+              size="sm"
+              onClick={onSave}
+              disabled={saveStatus === "saving"}
+              className={`gap-2 ${hasUnsavedChanges ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+            >
+              {saveStatus === "saving" ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="hidden sm:inline">Saving...</span>
+                </>
+              ) : saveStatus === "saved" ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span className="hidden sm:inline">Saved</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    {hasUnsavedChanges ? "Save Changes" : "Save"}
+                  </span>
+                </>
+              )}
+            </Button>
+          )}
 
           {/* Action buttons passed as children */}
           {children}

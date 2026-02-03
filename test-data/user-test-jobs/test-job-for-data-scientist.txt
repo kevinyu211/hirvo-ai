@@ -1,0 +1,21 @@
+Data Scientist - ML Engineering
+
+Fintech Company | New York, NY
+$165,000 - $210,000
+
+Join our team building ML models for fraud prevention and risk analytics.
+
+Requirements:
+- MS/PhD in CS, Statistics, or quantitative field
+- 3+ years as Data Scientist
+- Python, SQL expertise
+- TensorFlow or PyTorch experience
+- NLP or recommendation systems experience
+- Spark/big data familiarity
+- MLOps experience (MLflow)
+
+Responsibilities:
+- Build fraud detection ML models
+- Develop NLP solutions for document processing
+- Deploy models to production
+- Present findings to stakeholders

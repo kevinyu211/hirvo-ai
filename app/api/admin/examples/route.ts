@@ -4,7 +4,6 @@ import { z } from "zod";
 import { openai } from "@/lib/openai";
 import { extractFormattingPatterns } from "@/lib/formatting-patterns";
 import { extractContentPatterns } from "@/lib/content-patterns";
-import type { AutoLabelResult } from "@/lib/auto-labeler";
 
 const exampleSchema = z.object({
   jobDescription: z.string().min(50, "Job description must be at least 50 characters"),

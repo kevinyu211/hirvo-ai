@@ -1,0 +1,26 @@
+Senior Full Stack Engineer
+
+Tech Company | Austin, TX (Remote)
+$150,000 - $190,000
+
+We need a Senior Engineer for our platform team.
+
+Requirements:
+- 5+ years professional development experience
+- JavaScript/TypeScript and React
+- Node.js, Python, or Go backend experience
+- PostgreSQL expertise
+- AWS/GCP experience
+- CI/CD and DevOps knowledge
+- System design skills
+
+Responsibilities:
+- Build full-stack features
+- Code reviews and mentoring
+- Technical design decisions
+- Collaborate with product and design
+
+---
+USE WITH: resume-3-junior-dev-negative
+EXPECTED: System should show this resume has LOW match rate
+because the junior dev is underqualified for this senior role.

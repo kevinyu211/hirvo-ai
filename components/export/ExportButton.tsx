@@ -2,44 +2,115 @@
 
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ChevronRight, Check, Sparkles } from "lucide-react";
+import type { StructuredResume, ResumeFormatId } from "@/lib/types";
+import { FORMAT_METADATA } from "@/lib/types";
 
 export interface ExportButtonProps {
-  /** The current (possibly edited) resume text to export */
+  /** The current (possibly edited) resume text to export (legacy mode) */
   resumeText: string;
   /** Optional analysis ID for saving export event */
   analysisId?: string;
   /** Whether the button should be disabled (e.g., during analysis) */
   disabled?: boolean;
+  /** Structured resume for template-based export */
+  structuredResume?: StructuredResume | null;
+  /** Selected format template ID */
+  selectedFormat?: ResumeFormatId | null;
 }
 
 type ExportFormat = "pdf" | "docx";
+
+interface TemplateOption {
+  id: ResumeFormatId;
+  name: string;
+  description: string;
+  isRecommended?: boolean;
+}
+
+// Map new template IDs to options
+const TEMPLATES: TemplateOption[] = [
+  {
+    id: "modern",
+    name: "Modern",
+    description: "Clean sans-serif with subtle accents",
+  },
+  {
+    id: "classic",
+    name: "Classic",
+    description: "Traditional serif fonts, timeless layout",
+  },
+  {
+    id: "minimalist",
+    name: "Minimalist",
+    description: "Maximum whitespace, elegant fonts",
+  },
+  {
+    id: "technical",
+    name: "Technical",
+    description: "Monospace style for engineering roles",
+  },
+  {
+    id: "executive",
+    name: "Executive",
+    description: "Premium serif for senior positions",
+  },
+];
 
 export function ExportButton({
   resumeText,
   analysisId,
   disabled = false,
+  structuredResume,
+  selectedFormat: preSelectedFormat,
 }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [fileFormat, setFileFormat] = useState<ExportFormat | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<ResumeFormatId>(preSelectedFormat || "modern");
   const [error, setError] = useState<string | null>(null);
 
+  // Update template when preSelectedFormat changes
+  const handleSelectFormat = useCallback((format: ExportFormat) => {
+    setFileFormat(format);
+    setShowTemplates(true);
+    // If there's a pre-selected format, use it
+    if (preSelectedFormat) {
+      setSelectedTemplate(preSelectedFormat);
+    }
+  }, [preSelectedFormat]);
+
   const handleExport = useCallback(
-    async (format: ExportFormat) => {
+    async (format: ExportFormat, template: ResumeFormatId) => {
       setDropdownOpen(false);
+      setShowTemplates(false);
+      setFileFormat(null);
       setIsExporting(true);
       setExportFormat(format);
       setError(null);
 
       try {
+        // Use structured resume export if available
+        const body = structuredResume
+          ? {
+              format,
+              templateId: template,
+              structuredResume,
+              ...(analysisId ? { analysisId } : {}),
+            }
+          : {
+              text: resumeText,
+              format,
+              templateId: template,
+              ...(analysisId ? { analysisId } : {}),
+            };
+
         const response = await fetch("/api/export", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text: resumeText,
-            format,
-            ...(analysisId ? { analysisId } : {}),
-          }),
+          body: JSON.stringify(body),
         });
 
         if (!response.ok) {
@@ -73,14 +144,20 @@ export function ExportButton({
         setExportFormat(null);
       }
     },
-    [resumeText, analysisId]
+    [resumeText, analysisId, structuredResume]
   );
+
+  const handleBackToFormats = useCallback(() => {
+    setShowTemplates(false);
+    setFileFormat(null);
+  }, []);
 
   const isDisabled = disabled || isExporting || !resumeText;
 
   return (
     <div className="relative inline-block">
       <Button
+        variant="accent"
         onClick={() => setDropdownOpen((prev) => !prev)}
         disabled={isDisabled}
         className="gap-2"
@@ -153,74 +230,152 @@ export function ExportButton({
           {/* Backdrop to close dropdown */}
           <div
             className="fixed inset-0 z-40"
-            onClick={() => setDropdownOpen(false)}
+            onClick={() => {
+              setDropdownOpen(false);
+              setShowTemplates(false);
+              setFileFormat(null);
+            }}
             aria-hidden="true"
           />
 
           <div
-            className="absolute right-0 mt-1 w-52 rounded-md border bg-popover shadow-lg z-50"
+            className="absolute right-0 mt-2 w-64 rounded-2xl border-2 bg-popover shadow-dramatic z-50 overflow-hidden"
             role="menu"
-            aria-label="Export format options"
+            aria-label="Export options"
           >
-            <button
-              className="flex w-full items-center gap-3 px-3 py-2.5 text-sm text-left hover:bg-accent rounded-t-md transition-colors"
-              onClick={() => handleExport("pdf")}
-              role="menuitem"
-              disabled={isDisabled}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-red-500 flex-shrink-0"
-                aria-hidden="true"
-              >
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-              <div>
-                <div className="font-medium">Download as PDF</div>
-                <div className="text-xs text-muted-foreground">
-                  ATS-friendly PDF format
+            {!showTemplates ? (
+              // Format Selection
+              <>
+                <div className="px-3 py-2 border-b">
+                  <p className="text-xs font-medium text-muted-foreground">Choose format</p>
                 </div>
-              </div>
-            </button>
+                <button
+                  className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-sm text-left hover:bg-accent transition-colors"
+                  onClick={() => handleSelectFormat("pdf")}
+                  role="menuitem"
+                  disabled={isDisabled}
+                >
+                  <div className="flex items-center gap-3">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-red-500 flex-shrink-0"
+                      aria-hidden="true"
+                    >
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    <div>
+                      <div className="font-medium">PDF</div>
+                      <div className="text-xs text-muted-foreground">
+                        ATS-friendly format
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </button>
 
-            <div className="border-t" />
+                <div className="border-t" />
 
-            <button
-              className="flex w-full items-center gap-3 px-3 py-2.5 text-sm text-left hover:bg-accent rounded-b-md transition-colors"
-              onClick={() => handleExport("docx")}
-              role="menuitem"
-              disabled={isDisabled}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-blue-500 flex-shrink-0"
-                aria-hidden="true"
-              >
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-              <div>
-                <div className="font-medium">Download as DOCX</div>
-                <div className="text-xs text-muted-foreground">
-                  Editable Word document
+                <button
+                  className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-sm text-left hover:bg-accent transition-colors"
+                  onClick={() => handleSelectFormat("docx")}
+                  role="menuitem"
+                  disabled={isDisabled}
+                >
+                  <div className="flex items-center gap-3">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-blue-500 flex-shrink-0"
+                      aria-hidden="true"
+                    >
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    <div>
+                      <div className="font-medium">DOCX</div>
+                      <div className="text-xs text-muted-foreground">
+                        Editable Word document
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </>
+            ) : (
+              // Template Selection
+              <>
+                <div className="px-3 py-2 border-b flex items-center gap-2">
+                  <button
+                    onClick={handleBackToFormats}
+                    className="text-muted-foreground hover:text-foreground"
+                    aria-label="Go back"
+                  >
+                    <ChevronRight className="w-4 h-4 rotate-180" />
+                  </button>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Choose template for {fileFormat?.toUpperCase()}
+                  </p>
                 </div>
-              </div>
-            </button>
+                <div className="max-h-72 overflow-y-auto">
+                  {TEMPLATES.map((template) => {
+                    const isPreSelected = preSelectedFormat === template.id;
+                    return (
+                      <button
+                        key={template.id}
+                        className={`flex w-full items-center justify-between gap-3 px-3 py-2.5 text-sm text-left hover:bg-accent transition-colors ${
+                          selectedTemplate === template.id ? "bg-accent" : ""
+                        }`}
+                        onClick={() => {
+                          setSelectedTemplate(template.id);
+                          if (fileFormat) {
+                            handleExport(fileFormat, template.id);
+                          }
+                        }}
+                        role="menuitem"
+                        disabled={isDisabled}
+                      >
+                        <div>
+                          <div className="font-medium flex items-center gap-2">
+                            {template.name}
+                            {isPreSelected && (
+                              <span className="text-xs text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" />
+                                Recommended
+                              </span>
+                            )}
+                            {template.id === "modern" && !isPreSelected && !preSelectedFormat && (
+                              <span className="text-xs text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {template.description}
+                          </div>
+                        </div>
+                        {selectedTemplate === template.id && (
+                          <Check className="w-4 h-4 text-emerald-600" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </>
       )}

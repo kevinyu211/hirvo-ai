@@ -375,8 +375,6 @@ export function comparePatterns(
   }
 
   // Strong verbs comparison
-  const userStrong = userPatterns.actionVerbs.strongVerbCount;
-  const refStrong = referencePatterns.actionVerbs.strongVerbCount;
   const userWeak = userPatterns.actionVerbs.weakVerbCount;
   if (userWeak > 0) {
     comparisons.push({

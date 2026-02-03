@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, BarChart3 } from "lucide-react";
+import { X, BarChart3, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResultsSidebar } from "./ResultsSidebar";
+import { ATSScoreCard } from "@/components/scores/ATSScoreCard";
+import { HRScoreCard } from "@/components/scores/HRScoreCard";
 import type { ATSScore, HRScore, Suggestion } from "@/lib/types";
 import type { HRLayerData } from "@/components/scores/HRScoreCard";
 import type { ViewMode } from "@/components/editor/ViewToggle";
@@ -19,6 +21,12 @@ export interface MobileSidebarProps {
   onDismiss: (suggestion: Suggestion) => void;
   onViewSuggestion: (suggestion: Suggestion) => void;
   suggestionCount: number;
+  jobDescription?: string;
+  // These props are passed for API consistency with desktop but mobile
+  // handles details display internally via showDetailsInSheet state
+  onOpenDetails?: () => void;
+  isDetailsPanelOpen?: boolean;
+  onCloseDetails?: () => void;
 }
 
 export function MobileSidebar({
@@ -32,14 +40,22 @@ export function MobileSidebar({
   onDismiss,
   onViewSuggestion,
   suggestionCount,
+  jobDescription,
+  // Note: onOpenDetails, isDetailsPanelOpen, onCloseDetails are passed for API consistency
+  // but mobile handles details display internally via showDetailsInSheet state
 }: MobileSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showDetailsInSheet, setShowDetailsInSheet] = useState(false);
 
   // Close on escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setIsOpen(false);
+        if (showDetailsInSheet) {
+          setShowDetailsInSheet(false);
+        } else {
+          setIsOpen(false);
+        }
       }
     };
 
@@ -52,12 +68,17 @@ export function MobileSidebar({
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [isOpen]);
+  }, [isOpen, showDetailsInSheet]);
 
   // Handle applying fix - close sheet after applying
   const handleApplyFix = (suggestion: Suggestion) => {
     onApplyFix(suggestion);
     setIsOpen(false);
+  };
+
+  // Handle opening details in mobile (shows in same sheet)
+  const handleOpenDetails = () => {
+    setShowDetailsInSheet(true);
   };
 
   // Get the current score to display on FAB
@@ -68,19 +89,19 @@ export function MobileSidebar({
 
   return (
     <>
-      {/* FAB Button */}
+      {/* FAB Button - Bold Transformation */}
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-foreground text-background px-4 py-3 rounded-full shadow-lg hover:scale-105 transition-transform lg:hidden"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 bg-foreground text-background px-5 py-3.5 rounded-full shadow-float hover:shadow-float-lg hover:scale-105 active:scale-95 transition-all duration-300 ease-out-back lg:hidden"
         aria-label="Open score sidebar"
       >
         <BarChart3 className="w-5 h-5" />
-        <span className="font-medium text-sm">
+        <span className="font-semibold text-sm">
           {currentScore !== undefined ? `${Math.round(currentScore)}%` : "Scores"}
         </span>
         {suggestionCount > 0 && (
-          <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">
+          <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center animate-pulse-soft">
             {suggestionCount}
           </span>
         )}
@@ -89,53 +110,90 @@ export function MobileSidebar({
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity duration-300"
+          onClick={() => {
+            setShowDetailsInSheet(false);
+            setIsOpen(false);
+          }}
           aria-hidden="true"
         />
       )}
 
-      {/* Bottom Sheet */}
+      {/* Bottom Sheet - Bold 48px Radius */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out lg:hidden ${
+        className={`fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-[3rem] shadow-float-lg transition-transform duration-500 ease-spring lg:hidden ${
           isOpen ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ maxHeight: "85vh" }}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        {/* Drag handle - Larger */}
+        <div className="flex justify-center pt-4 pb-2">
+          <div className="w-12 h-1.5 rounded-full bg-muted-foreground/30" />
         </div>
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b">
-          <h2 className="font-display font-semibold text-lg">Analysis</h2>
+          {showDetailsInSheet ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowDetailsInSheet(false)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+              <h2 className="font-display font-semibold text-lg">
+                {activeView === "ats" ? "ATS Details" : "HR Details"}
+              </h2>
+            </>
+          ) : (
+            <h2 className="font-display font-semibold text-lg">Analysis</h2>
+          )}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setShowDetailsInSheet(false);
+              setIsOpen(false);
+            }}
             className="h-8 w-8"
           >
             <X className="w-5 h-5" />
           </Button>
         </div>
 
-        {/* Sidebar Content */}
+        {/* Content */}
         <div className="overflow-y-auto" style={{ maxHeight: "calc(85vh - 80px)" }}>
-          <ResultsSidebar
-            activeView={activeView}
-            onViewChange={onViewChange}
-            atsScore={atsScore}
-            hrScore={hrScore}
-            hrLayers={hrLayers}
-            suggestions={suggestions}
-            onApplyFix={handleApplyFix}
-            onDismiss={onDismiss}
-            onViewSuggestion={(s) => {
-              onViewSuggestion(s);
-              setIsOpen(false);
-            }}
-          />
+          {showDetailsInSheet ? (
+            // Full breakdown details
+            <div className="p-4">
+              {activeView === "ats" && atsScore && (
+                <ATSScoreCard score={atsScore} />
+              )}
+              {activeView === "hr" && hrScore && (
+                <HRScoreCard score={hrScore} layers={hrLayers} />
+              )}
+            </div>
+          ) : (
+            // Sidebar content
+            <ResultsSidebar
+              activeView={activeView}
+              onViewChange={onViewChange}
+              atsScore={atsScore}
+              hrScore={hrScore}
+              hrLayers={hrLayers}
+              suggestions={suggestions}
+              onApplyFix={handleApplyFix}
+              onDismiss={onDismiss}
+              onViewSuggestion={(s) => {
+                onViewSuggestion(s);
+                setIsOpen(false);
+              }}
+              jobDescription={jobDescription}
+              onOpenDetails={handleOpenDetails}
+            />
+          )}
         </div>
       </div>
     </>

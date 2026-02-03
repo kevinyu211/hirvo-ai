@@ -516,6 +516,79 @@
   );
 }
 
+/* Bold gradient mesh - enhanced */
+.gradient-mesh-bold {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 30%, hsl(158 64% 40% / 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 70%, hsl(220 25% 30% / 0.08), transparent),
+    radial-gradient(ellipse 50% 30% at 40% 80%, hsl(38 92% 50% / 0.06), transparent);
+}
+
+/* ============================================================================
+   ATMOSPHERIC BACKGROUNDS - BOLD TRANSFORMATION
+   ============================================================================ */
+
+/* Animated gradient orb - primary */
+.bg-orb-primary {
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, hsl(158 64% 40% / 0.2), transparent 60%);
+  filter: blur(100px);
+  animation: float-dramatic 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Animated gradient orb - secondary */
+.bg-orb-secondary {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, hsl(220 25% 30% / 0.1), transparent 60%);
+  filter: blur(80px);
+  animation: float-dramatic 15s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+
+@keyframes float-dramatic {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(0.5deg); }
+  75% { transform: translateY(-4px) rotate(-0.5deg); }
+}
+
+/* Noise texture for depth */
+.bg-noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+}
+
+/* Dark mode orbs - inverted */
+.dark .bg-orb-primary {
+  background: radial-gradient(circle, hsl(158 64% 45% / 0.1), transparent 60%);
+}
+
+.dark .bg-orb-secondary {
+  background: radial-gradient(circle, hsl(220 30% 35% / 0.08), transparent 60%);
+}
+
+/* ============================================================================
+   DIVIDERS - REFINED
+   ============================================================================ */
+
+.divider-subtle {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+}
+
+.divider-accent {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, hsl(var(--accent) / 0.5), transparent);
+}
+
 /* ============================================================================
    GLASSMORPHISM
    ============================================================================ */
@@ -533,42 +606,81 @@
 }
 
 /* ============================================================================
-   CARD VARIANTS
+   CARD VARIANTS - BOLD TRANSFORMATION
    ============================================================================ */
 
 .card-elevated {
-  @apply bg-card rounded-xl border shadow-sm;
-  box-shadow:
-    0 1px 3px hsl(220 25% 12% / 0.04),
-    0 4px 12px hsl(220 25% 12% / 0.06);
+  @apply bg-card rounded-2xl border-2 border-transparent;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 20px -5px rgba(0,0,0,0.08), 0 25px 50px -12px rgba(0,0,0,0.12);
+  transition: all 0.4s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
 
 .card-elevated:hover {
+  transform: translateY(-8px) scale(1.01);
+  border-color: hsl(var(--accent) / 0.3);
   box-shadow:
-    0 2px 6px hsl(220 25% 12% / 0.06),
-    0 8px 24px hsl(220 25% 12% / 0.08);
-  transform: translateY(-2px);
-  transition: all 0.3s ease;
+    0 10px 15px -3px rgba(0,0,0,0.06),
+    0 20px 40px -10px rgba(0,0,0,0.1),
+    0 40px 80px -20px rgba(0,0,0,0.15),
+    0 0 30px -10px hsl(var(--accent) / 0.15); /* Subtle glow */
 }
 
 .card-interactive {
   @apply card-elevated cursor-pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-interactive:hover {
   @apply border-accent/30;
 }
 
-.card-highlight {
-  @apply bg-card rounded-xl border-2 border-accent/20;
+/* Bold card variant for feature cards */
+.card-bold {
+  @apply rounded-3xl bg-card border-2 border-transparent;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 20px -5px rgba(0,0,0,0.08), 0 25px 50px -12px rgba(0,0,0,0.12);
+  transition: all 0.4s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+.card-bold:hover {
+  transform: translateY(-8px) scale(1.01);
+  border-color: hsl(var(--accent) / 0.3);
   box-shadow:
-    0 0 0 4px hsl(var(--accent) / 0.05),
-    0 4px 12px hsl(220 25% 12% / 0.06);
+    0 10px 15px -3px rgba(0,0,0,0.06),
+    0 20px 40px -10px rgba(0,0,0,0.1),
+    0 40px 80px -20px rgba(0,0,0,0.15),
+    0 0 30px -10px hsl(var(--accent) / 0.3);
+}
+
+.card-highlight {
+  @apply bg-card rounded-2xl border-2 border-accent/20;
+  box-shadow:
+    0 0 0 4px hsl(var(--accent) / 0.08),
+    0 4px 6px -1px rgba(0,0,0,0.05),
+    0 10px 20px -5px rgba(0,0,0,0.08);
+}
+
+/* Gradient border for premium cards */
+.card-gradient-border {
+  position: relative;
+  background: hsl(var(--card));
+  border-radius: 2rem;
+}
+
+.card-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(2rem + 2px);
+  background: linear-gradient(135deg, hsl(var(--border)), hsl(var(--accent) / 0.3));
+  z-index: -1;
+}
+
+/* Inner highlight for cards */
+.card-inner-highlight {
+  box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05);
 }
 
 /* ============================================================================
-   SCORE GAUGE ANIMATIONS
+   SCORE GAUGE ANIMATIONS - BOLD TRANSFORMATION
    ============================================================================ */
 
 .score-gauge-circle {
@@ -579,8 +691,36 @@
   animation: fade-up 0.8s ease-out 0.5s both;
 }
 
+/* Gradient ring effect for score gauge */
+.score-gauge-gradient {
+  background: conic-gradient(
+    from 180deg,
+    hsl(158 64% 50%) 0%,
+    hsl(158 64% 35%) var(--progress, 50%),
+    hsl(var(--muted)) var(--progress, 50%)
+  );
+}
+
+/* Glowing container for excellent scores (>=85) */
+.score-excellent {
+  animation: glow-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 60px -15px hsl(158 64% 40% / 0.5);
+}
+
+/* Success celebration animation */
+.score-improved {
+  animation: success-celebration 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes success-celebration {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.05); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
 /* ============================================================================
-   BUTTON ENHANCEMENTS
+   BUTTON ENHANCEMENTS - BOLD TRANSFORMATION
    ============================================================================ */
 
 .btn-primary-glow {
@@ -605,8 +745,42 @@
   opacity: 1;
 }
 
+/* Bold primary button with gradient and glow */
+.btn-bold-primary {
+  @apply rounded-xl px-6 py-3 font-semibold text-white;
+  background: linear-gradient(135deg, hsl(158 64% 45%), hsl(158 64% 35%));
+  box-shadow: 0 0 20px -5px hsl(158 64% 40% / 0.4), 0 8px 30px -8px hsl(158 64% 40% / 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-bold-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 40px -10px hsl(158 64% 40% / 0.5),
+    0 15px 50px -15px hsl(158 64% 40% / 0.35),
+    0 8px 25px -5px hsl(158 64% 40% / 0.3);
+}
+
+.btn-bold-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Pulsing CTA button */
+.btn-cta-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px -5px hsl(158 64% 40% / 0.4), 0 8px 30px -8px hsl(158 64% 40% / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px -5px hsl(158 64% 40% / 0.6), 0 15px 50px -10px hsl(158 64% 40% / 0.4);
+  }
+}
+
 /* ============================================================================
-   INPUT ENHANCEMENTS
+   INPUT ENHANCEMENTS - BOLD TRANSFORMATION
    ============================================================================ */
 
 .input-enhanced {
@@ -616,6 +790,21 @@
 .input-enhanced:focus {
   @apply border-accent shadow-sm;
   box-shadow: 0 0 0 3px hsl(var(--accent) / 0.1);
+}
+
+/* Bold input with tactile feel */
+.input-bold {
+  @apply rounded-xl border-2 px-4 py-3;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.input-bold:focus {
+  border-color: hsl(var(--accent));
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.03),
+    0 0 0 4px hsl(var(--accent) / 0.15),
+    0 0 20px -5px hsl(var(--accent) / 0.3);
 }
 
 /* ============================================================================
@@ -822,19 +1011,50 @@
 }
 
 /* ============================================================================
-   DARK MODE CARD ENHANCEMENTS
+   DARK MODE CARD ENHANCEMENTS - BOLD TRANSFORMATION
    ============================================================================ */
 
 .dark .card-elevated {
   box-shadow:
-    0 1px 3px hsl(0 0% 0% / 0.2),
-    0 4px 12px hsl(0 0% 0% / 0.15);
+    0 4px 6px -1px rgba(0,0,0,0.15),
+    0 10px 20px -5px rgba(0,0,0,0.2),
+    0 25px 50px -12px rgba(0,0,0,0.25);
 }
 
 .dark .card-elevated:hover {
   box-shadow:
-    0 2px 6px hsl(0 0% 0% / 0.25),
-    0 8px 24px hsl(0 0% 0% / 0.2);
+    0 10px 15px -3px rgba(0,0,0,0.2),
+    0 20px 40px -10px rgba(0,0,0,0.25),
+    0 40px 80px -20px rgba(0,0,0,0.3),
+    0 0 30px -10px hsl(158 64% 42% / 0.25);
+}
+
+.dark .card-bold {
+  box-shadow:
+    0 4px 6px -1px rgba(0,0,0,0.15),
+    0 10px 20px -5px rgba(0,0,0,0.2),
+    0 25px 50px -12px rgba(0,0,0,0.25);
+}
+
+.dark .card-bold:hover {
+  box-shadow:
+    0 10px 15px -3px rgba(0,0,0,0.2),
+    0 20px 40px -10px rgba(0,0,0,0.25),
+    0 40px 80px -20px rgba(0,0,0,0.3),
+    0 0 30px -10px hsl(158 64% 42% / 0.25);
+}
+
+/* Dark mode score glow */
+.dark .score-excellent {
+  box-shadow: 0 0 60px -15px hsl(158 64% 42% / 0.4);
+}
+
+/* Dark mode gradient mesh */
+.dark .gradient-mesh-bold {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 30%, hsl(158 64% 42% / 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 70%, hsl(220 18% 13% / 0.15), transparent),
+    radial-gradient(ellipse 50% 30% at 40% 80%, hsl(38 70% 50% / 0.05), transparent);
 }
 
 /* ============================================================================
@@ -855,4 +1075,133 @@
 
 .dark .badge-score-danger {
   @apply bg-red-900/50 text-red-300 border-red-700;
+}
+
+/* ============================================================================
+   MOBILE DRAWER - BOLD TRANSFORMATION
+   ============================================================================ */
+
+.mobile-drawer {
+  border-radius: 3rem 3rem 0 0;
+  box-shadow: 0 -10px 50px -10px rgba(0,0,0,0.2);
+}
+
+.drawer-handle {
+  width: 48px;
+  height: 5px;
+  border-radius: 9999px;
+  background: hsl(var(--muted-foreground) / 0.3);
+  margin: 12px auto 20px;
+}
+
+/* Spring animation for drawer */
+.drawer-spring-enter {
+  animation: spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes spring-up {
+  0% { transform: translateY(100%); }
+  70% { transform: translateY(-3%); }
+  100% { transform: translateY(0); }
+}
+
+/* ============================================================================
+   FAB BUTTON - BOLD TRANSFORMATION
+   ============================================================================ */
+
+.fab-bold {
+  @apply rounded-full shadow-float;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fab-bold:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 35px 60px -15px rgba(0,0,0,0.25), 0 20px 40px -10px rgba(0,0,0,0.15);
+}
+
+.fab-bold:active {
+  transform: scale(0.95);
+}
+
+/* ============================================================================
+   REDUCED MOTION - ACCESSIBILITY
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .bg-orb-primary,
+  .bg-orb-secondary {
+    animation: none;
+  }
+
+  .score-excellent,
+  .btn-cta-pulse {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   TYPOGRAPHY REFINEMENTS
+   ============================================================================ */
+
+.tracking-tight-plus {
+  letter-spacing: -0.025em;
+}
+
+.tracking-relaxed {
+  letter-spacing: 0.015em;
+}
+
+.text-shadow-soft {
+  text-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* ============================================================================
+   SHIMMER LOADING - BOLD
+   ============================================================================ */
+
+.shimmer-bold {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted-foreground) / 0.15) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-sweep 2s linear infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ============================================================================
+   RESULTS CONTAINER - 80vw WIDTH
+   ============================================================================ */
+
+.results-container {
+  width: 80vw;
+  max-width: 1600px;
+}
+
+/* Tablet (768px - 1023px) */
+@media (max-width: 1023px) {
+  .results-container {
+    width: 90vw;
+  }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 767px) {
+  .results-container {
+    width: 95vw;
+  }
 }

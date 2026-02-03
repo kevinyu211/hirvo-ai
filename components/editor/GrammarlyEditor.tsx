@@ -270,42 +270,67 @@ export function GrammarlyEditor({
         spellCheck={false}
       />
 
-      {/* Legend */}
+      {/* Color Legend - Always Visible */}
       <div
-        className="mt-2 flex flex-wrap gap-2 md:gap-3 text-[10px] md:text-xs text-muted-foreground"
-        aria-label="Highlight legend"
+        className="mt-4 p-3 rounded-lg border bg-muted/30"
+        aria-label="Highlight color legend"
       >
-        {activeView === "ats" ? (
-          <>
-            <span className="inline-flex items-center gap-1">
-              <span className="inline-block h-3 w-3 rounded-sm bg-red-300 border border-red-500" />
-              Missing Keyword
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="inline-block h-3 w-3 rounded-sm bg-yellow-300 border border-yellow-500" />
-              Weak Keyword
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="inline-block h-3 w-3 rounded-sm bg-orange-300 border border-orange-500" />
-              Formatting Issue
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="inline-flex items-center gap-1">
-              <span className="inline-block h-3 w-3 rounded-sm bg-blue-300 border border-blue-500" />
-              Formatting (Layer 1)
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="inline-block h-3 w-3 rounded-sm bg-purple-300 border border-purple-500" />
-              Semantic (Layer 2)
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="inline-block h-3 w-3 rounded-sm bg-teal-300 border border-teal-500" />
-              LLM Review (Layer 3)
-            </span>
-          </>
-        )}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-medium text-foreground">
+            {activeView === "ats" ? "ATS Highlight Guide" : "HR Review Highlight Guide"}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          {activeView === "ats" ? (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-4 w-4 rounded bg-red-200/70 border-b-2 border-red-500" />
+                <div className="text-xs">
+                  <span className="font-medium text-red-600">Missing Keyword</span>
+                  <span className="text-muted-foreground ml-1">- Add this term from job description</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-4 w-4 rounded bg-yellow-200/70 border-b-2 border-yellow-500" />
+                <div className="text-xs">
+                  <span className="font-medium text-yellow-600">Weak Keyword</span>
+                  <span className="text-muted-foreground ml-1">- Strengthen with more specific language</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-4 w-4 rounded bg-orange-200/70 border-b-2 border-orange-500" />
+                <div className="text-xs">
+                  <span className="font-medium text-orange-600">Formatting Issue</span>
+                  <span className="text-muted-foreground ml-1">- May confuse ATS parsers</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-4 w-4 rounded bg-blue-200/70 border-b-2 border-blue-500" />
+                <div className="text-xs">
+                  <span className="font-medium text-blue-600">Formatting (Layer 1)</span>
+                  <span className="text-muted-foreground ml-1">- Structure & layout issues</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-4 w-4 rounded bg-purple-200/70 border-b-2 border-purple-500" />
+                <div className="text-xs">
+                  <span className="font-medium text-purple-600">Semantic (Layer 2)</span>
+                  <span className="text-muted-foreground ml-1">- Content meaning & clarity</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-4 w-4 rounded bg-teal-200/70 border-b-2 border-teal-500" />
+                <div className="text-xs">
+                  <span className="font-medium text-teal-600">LLM Review (Layer 3)</span>
+                  <span className="text-muted-foreground ml-1">- AI-detected improvements</span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -226,7 +226,7 @@ export default function AnalyzePage() {
               size="lg"
               disabled={!canSubmit}
               onClick={handleAnalyze}
-              className="w-full sm:w-auto gap-2 gradient-emerald text-white border-0 shadow-soft hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              className="w-full sm:w-auto gap-2.5 gradient-emerald text-white border-0 shadow-glow-emerald hover:shadow-glow-emerald-lg transition-all duration-300 ease-out-back hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:translate-y-0"
             >
               {submitting ? (
                 <>

@@ -7,6 +7,8 @@ import {
   computeATSScore,
   runATSAnalysis,
   stem,
+  detectJobType,
+  WEIGHT_PROFILES,
 } from "@/lib/ats-engine";
 
 // ============================================================================
@@ -120,13 +122,29 @@ describe("matchKeywords", () => {
     expect(result.matchPct).toBe(75);
   });
 
-  it("matches stemmed variations", () => {
+  it("does NOT match stemmed variations in strict mode (default)", () => {
     const resume = "Managed a team of developers and optimized database queries.";
     const keywords = ["management", "optimization", "developer"];
-    const result = matchKeywords(resume, keywords);
+
+    // Strict mode (default) - mimics real ATS systems
+    const strictResult = matchKeywords(resume, keywords);
+
+    // Only "developer" should match (exact word boundary match with "developers")
+    // "management" and "optimization" should NOT match "Managed" and "optimized"
+    expect(strictResult.matched.length).toBe(0); // None match exactly
+    expect(strictResult.missing).toContain("management");
+    expect(strictResult.missing).toContain("optimization");
+  });
+
+  it("matches stemmed variations in fuzzy mode (for HR layer)", () => {
+    const resume = "Managed a team of developers and optimized database queries.";
+    const keywords = ["management", "optimization", "developer"];
+
+    // Fuzzy mode - for HR semantic analysis layer
+    const fuzzyResult = matchKeywords(resume, keywords, { strictMode: false });
 
     // "Managed" stems to match "management" stem, "optimized" stems to match "optimization" stem
-    expect(result.matched.length).toBeGreaterThanOrEqual(2);
+    expect(fuzzyResult.matched.length).toBeGreaterThanOrEqual(2);
   });
 
   it("matches multi-word phrases when all words present", () => {
@@ -364,11 +382,16 @@ describe("computeATSScore", () => {
 
     const result = computeATSScore(keywordResult, formattingResult, sectionResult);
 
-    // Should include formatting issues + missing keyword issues + missing section issues
-    expect(result.issues.length).toBeGreaterThanOrEqual(3);
+    // Should include formatting issues + missing section issues
+    // NOTE: Missing keywords are no longer generated as individual issues to prevent UI bloat.
+    // They are tracked in missingKeywords[] and displayed in ThingsToAddSection.
+    expect(result.issues.length).toBeGreaterThanOrEqual(2);
     expect(result.issues.some((i) => i.type === "formatting")).toBe(true);
-    expect(result.issues.some((i) => i.type === "missing_keyword")).toBe(true);
     expect(result.issues.some((i) => i.type === "section")).toBe(true);
+
+    // Missing keywords should still be tracked in the separate array
+    expect(result.missingKeywords).toContain("python");
+    expect(result.missingKeywords).toContain("sql");
   });
 
   it("populates matchedKeywords and missingKeywords", () => {
@@ -469,5 +492,99 @@ Skills: JavaScript`;
 
     const result = runATSAnalysis(resume, "javascript developer", { pageCount: 5 });
     expect(result.issues.some((i) => i.message.includes("pages"))).toBe(true);
+  });
+
+  it("includes jobType and weights in result", () => {
+    const resume = "john@email.com\nExperience: Built software\nSkills: Python";
+    const jd = "Senior Software Engineer with 10+ years experience in software development";
+
+    const result = runATSAnalysis(resume, jd);
+
+    expect(result.jobType).toBeDefined();
+    expect(result.weights).toBeDefined();
+    expect(result.weights.keywords).toBeGreaterThan(0);
+    expect(result.weights.formatting).toBeGreaterThan(0);
+    expect(result.weights.sections).toBeGreaterThan(0);
+  });
+
+  it("detects job type correctly for senior roles", () => {
+    const resume = "john@email.com\nExperience: Built software\nSkills: Python";
+    const jd = "Senior Staff Engineer with 10+ years experience, leading teams of engineers";
+
+    const result = runATSAnalysis(resume, jd);
+
+    expect(result.jobType).toBe("senior");
+    expect(result.weights).toEqual(WEIGHT_PROFILES.senior);
+  });
+
+  it("uses strict matching by default", () => {
+    const resume = "Managed projects and optimized systems";
+    const jd = "Looking for someone with project management and optimization skills";
+
+    // With strict matching, "Managed" should NOT match "management"
+    const result = runATSAnalysis(resume, jd, { strictMode: true });
+
+    expect(result.matchedKeywords).not.toContain("management");
+    expect(result.matchedKeywords).not.toContain("optimization");
+  });
+});
+
+// ============================================================================
+// detectJobType()
+// ============================================================================
+describe("detectJobType", () => {
+  it("detects tech jobs", () => {
+    const jd = "We are looking for a Software Engineer to join our development team. Experience with backend programming required.";
+    expect(detectJobType(jd)).toBe("tech");
+  });
+
+  it("detects senior roles", () => {
+    const jd = "Senior Staff Engineer position. Looking for a technical lead with 10+ years experience to architect solutions.";
+    expect(detectJobType(jd)).toBe("senior");
+  });
+
+  it("detects entry-level roles", () => {
+    const jd = "Junior Developer position. This is an entry-level role perfect for new graduates. 0-2 years experience.";
+    expect(detectJobType(jd)).toBe("entry");
+  });
+
+  it("returns general for non-specific roles", () => {
+    const jd = "Looking for a Marketing Specialist to join our team.";
+    expect(detectJobType(jd)).toBe("general");
+  });
+
+  it("prioritizes senior over tech when both present", () => {
+    const jd = "Senior Software Engineer with leadership experience. Must be a technical lead who can architect backend systems.";
+    expect(detectJobType(jd)).toBe("senior");
+  });
+
+  it("handles case-insensitive matching", () => {
+    // Need 2+ senior signals to trigger senior detection
+    const jd = "SENIOR LEAD ENGINEER with 10+ YEARS experience";
+    expect(detectJobType(jd)).toBe("senior");
+  });
+});
+
+// ============================================================================
+// WEIGHT_PROFILES
+// ============================================================================
+describe("WEIGHT_PROFILES", () => {
+  it("has weights that sum to 1.0 for each job type", () => {
+    for (const [jobType, weights] of Object.entries(WEIGHT_PROFILES)) {
+      const sum = weights.keywords + weights.formatting + weights.sections;
+      expect(sum).toBeCloseTo(1.0, 5);
+    }
+  });
+
+  it("tech profiles emphasize formatting over general", () => {
+    expect(WEIGHT_PROFILES.tech.formatting).toBeGreaterThan(WEIGHT_PROFILES.general.formatting);
+  });
+
+  it("senior profiles emphasize keywords the most", () => {
+    expect(WEIGHT_PROFILES.senior.keywords).toBe(0.50);
+  });
+
+  it("entry profiles emphasize formatting the most", () => {
+    expect(WEIGHT_PROFILES.entry.formatting).toBe(0.40);
   });
 });

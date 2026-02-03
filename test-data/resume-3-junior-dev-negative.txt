@@ -1,0 +1,46 @@
+JASON MILLER
+Austin, TX | jmiller92@gmail.com | (512) 555-1234
+
+OBJECTIVE
+Looking for a software developer position where I can learn and grow my skills.
+
+EXPERIENCE
+
+IT Support Technician | LocalBiz Corp | Austin, TX | 2022 - Present
+- Help employees with computer problems
+- Set up new laptops and install software
+- Reset passwords and manage user accounts
+- Sometimes write scripts to automate tasks
+
+Freelance Web Developer | Self-Employed | 2021 - 2022
+- Built websites for small businesses using WordPress
+- Created a few custom themes
+- Did some PHP and JavaScript work
+
+Retail Associate | Electronics Store | Austin, TX | 2019 - 2021
+- Sold computers and electronics to customers
+- Helped customers troubleshoot tech issues
+- Met monthly sales goals
+
+EDUCATION
+Associate Degree in Computer Science | Austin Community College | 2021
+- Completed coursework in programming and databases
+
+SKILLS
+- HTML, CSS, JavaScript (basic)
+- WordPress
+- Some Python
+- Microsoft Office
+- Customer Service
+
+PROJECTS
+Personal Portfolio Website
+- Built my own website using HTML and CSS
+
+To-Do App
+- Made a simple to-do list app following a YouTube tutorial
+
+INTERESTS
+- Video games
+- Building computers
+- Learning to code

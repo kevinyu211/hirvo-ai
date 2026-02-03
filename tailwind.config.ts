@@ -58,10 +58,16 @@ const config: Config = {
           "5": "hsl(var(--chart-5))",
         },
       },
+      // Bold border radius system
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "0.625rem",     // 10px - Badges, chips, small tags
+        DEFAULT: "1rem",    // 16px - Buttons, inputs (base)
+        md: "1rem",         // 16px - Buttons, inputs
+        lg: "1.25rem",      // 20px - Small cards, dropdowns
+        xl: "1.5rem",       // 24px - Standard cards
+        "2xl": "2rem",      // 32px - Feature cards, modals
+        "3xl": "2.5rem",    // 40px - Hero cards, mobile drawer
+        "4xl": "3rem",      // 48px - Ultra-modern elements
       },
       fontFamily: {
         sans: ["DM Sans", "system-ui", "sans-serif"],
@@ -75,14 +81,31 @@ const config: Config = {
         "18": "4.5rem",
         "22": "5.5rem",
       },
+      // Dramatic shadow & glow system
       boxShadow: {
+        // Soft shadows (keeping for compatibility)
         "soft-sm": "0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.03)",
         "soft": "0 4px 14px -4px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.04)",
         "soft-lg": "0 8px 28px -6px rgba(0, 0, 0, 0.1), 0 4px 12px -4px rgba(0, 0, 0, 0.05)",
         "soft-xl": "0 16px 48px -10px rgba(0, 0, 0, 0.12), 0 8px 20px -6px rgba(0, 0, 0, 0.06)",
+        // Dramatic layered shadows
+        "dramatic": "0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 20px -5px rgba(0,0,0,0.08), 0 25px 50px -12px rgba(0,0,0,0.12)",
+        "dramatic-lg": "0 10px 15px -3px rgba(0,0,0,0.06), 0 20px 40px -10px rgba(0,0,0,0.1), 0 40px 80px -20px rgba(0,0,0,0.15)",
+        // Float shadows for elevated elements
+        "float": "0 25px 50px -12px rgba(0,0,0,0.2), 0 12px 24px -8px rgba(0,0,0,0.1)",
+        "float-lg": "0 35px 60px -15px rgba(0,0,0,0.25), 0 20px 40px -10px rgba(0,0,0,0.15)",
+        // Basic glows
         "glow": "0 0 20px -5px hsl(var(--accent) / 0.4)",
         "glow-lg": "0 0 40px -10px hsl(var(--accent) / 0.5)",
         "inner-glow": "inset 0 1px 0 0 rgba(255, 255, 255, 0.1)",
+        // Dramatic emerald glows
+        "glow-emerald": "0 0 20px -5px hsl(158 64% 40% / 0.4), 0 8px 30px -8px hsl(158 64% 40% / 0.3)",
+        "glow-emerald-lg": "0 0 40px -10px hsl(158 64% 40% / 0.5), 0 15px 50px -15px hsl(158 64% 40% / 0.35)",
+        "glow-emerald-intense": "0 0 60px -15px hsl(158 64% 40% / 0.6), 0 0 100px -30px hsl(158 64% 40% / 0.4)",
+        // Inner glows for depth
+        "inner-glow-emerald": "inset 0 0 20px -10px hsl(158 64% 40% / 0.2)",
+        // Card hover state
+        "card-hover": "0 10px 15px -3px rgba(0,0,0,0.06), 0 20px 40px -10px rgba(0,0,0,0.1), 0 40px 80px -20px rgba(0,0,0,0.15), 0 0 30px -10px hsl(158 64% 40% / 0.2)",
       },
       keyframes: {
         "accordion-down": {
@@ -113,6 +136,12 @@ const config: Config = {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        // Bold scale-bounce entrance
+        "scale-bounce-in": {
+          "0%": { transform: "scale(0.9)", opacity: "0" },
+          "50%": { transform: "scale(1.03)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
         "slide-in-from-top": {
           from: { opacity: "0", transform: "translateY(-10px)" },
           to: { opacity: "1", transform: "translateY(0)" },
@@ -141,6 +170,44 @@ const config: Config = {
           from: { "--num": "0" },
           to: { "--num": "var(--target, 100)" },
         },
+        // Dramatic float animation
+        "float-dramatic": {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "25%": { transform: "translateY(-8px) rotate(0.5deg)" },
+          "75%": { transform: "translateY(-4px) rotate(-0.5deg)" },
+        },
+        // Glow pulse for excellent scores
+        "glow-pulse": {
+          "0%, 100%": {
+            boxShadow: "0 0 20px -5px hsl(158 64% 40% / 0.4), 0 8px 30px -8px hsl(158 64% 40% / 0.3)",
+          },
+          "50%": {
+            boxShadow: "0 0 40px -5px hsl(158 64% 40% / 0.6), 0 15px 50px -10px hsl(158 64% 40% / 0.4)",
+          },
+        },
+        // Shimmer sweep for loading
+        "shimmer-sweep": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        // Border glow animation
+        "border-glow": {
+          "0%, 100%": { borderColor: "hsl(158 64% 40% / 0.2)" },
+          "50%": { borderColor: "hsl(158 64% 40% / 0.5)" },
+        },
+        // Success celebration
+        "success-celebration": {
+          "0%": { transform: "scale(1)" },
+          "25%": { transform: "scale(1.05)" },
+          "50%": { transform: "scale(0.98)" },
+          "100%": { transform: "scale(1)" },
+        },
+        // Spring entrance for mobile drawer
+        "spring-up": {
+          "0%": { transform: "translateY(100%)" },
+          "70%": { transform: "translateY(-3%)" },
+          "100%": { transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -150,16 +217,29 @@ const config: Config = {
         "fade-in": "fade-in 0.4s ease-out",
         "fade-up": "fade-up 0.5s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
+        "scale-bounce-in": "scale-bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
         "slide-in-from-top": "slide-in-from-top 0.3s ease-out",
         "slide-in-from-bottom": "slide-in-from-bottom 0.3s ease-out",
         "slide-in-from-left": "slide-in-from-left 0.3s ease-out",
         "slide-in-from-right": "slide-in-from-right 0.3s ease-out",
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
         "draw": "draw 1s ease-out forwards",
+        // New dramatic animations
+        "float-dramatic": "float-dramatic 12s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        "shimmer-sweep": "shimmer-sweep 2s linear infinite",
+        "border-glow": "border-glow 2s ease-in-out infinite",
+        "success-celebration": "success-celebration 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "spring-up": "spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
       transitionTimingFunction: {
         "bounce-in": "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
         "smooth": "cubic-bezier(0.4, 0, 0.2, 1)",
+        // Dramatic spring curves
+        "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "out-back": "cubic-bezier(0.34, 1.3, 0.64, 1)",
+        "elastic": "cubic-bezier(0.68, -0.6, 0.32, 1.6)",
       },
       backdropBlur: {
         xs: "2px",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -11,28 +11,42 @@ import {
   EditorSkeleton,
   SuggestionGeneratingSkeleton,
 } from "@/components/scores/ScoreCardSkeleton";
-import type { ViewMode } from "@/components/editor/ViewToggle";
-import { GrammarlyEditor } from "@/components/editor/GrammarlyEditor";
-import { SuggestionPopover } from "@/components/editor/SuggestionPopover";
 import { LoadingSteps } from "@/components/shared/LoadingSteps";
 import type { LoadingStep } from "@/components/shared/LoadingSteps";
 import { ExportButton } from "@/components/export/ExportButton";
 import { ResultsLayout } from "@/components/results/ResultsLayout";
+import { TemplateGallery } from "@/components/templates/TemplateGallery";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { ATSScore, HRScore, Suggestion } from "@/lib/types";
+import type {
+  ATSScore,
+  ATSIssue,
+  HRScore,
+  HRFeedback,
+  Suggestion,
+  StructuredResume,
+  ResumeFormatId,
+  MergedSectionFeedback,
+} from "@/lib/types";
 import { detectVisaStatus } from "@/lib/visa-detection";
 import { ArrowLeft, RefreshCw, Globe, Sparkles, AlertCircle } from "lucide-react";
 import { ResultsHeader } from "@/components/shared/ResultsHeader";
+import { StructuredResumeEditor } from "@/components/structured-editor";
+import { structuredToText } from "@/lib/resume-serializer";
+import { mergeSectionFeedback } from "@/lib/feedback-merger";
+import type { LearnedPatterns } from "@/lib/success-matching";
 
 // ============================================================================
 // Analysis pipeline step definitions
 // ============================================================================
 const INITIAL_STEPS: LoadingStep[] = [
-  { label: "Running ATS simulation", status: "pending" },
-  { label: "Analyzing HR perspective", status: "pending" },
-  { label: "Generating suggestions", status: "pending" },
-  { label: "Ready!", status: "pending" },
+  { label: "Parsing resume structure", status: "pending" },
+  { label: "Matching keywords to job description", status: "pending" },
+  { label: "Checking ATS formatting compliance", status: "pending" },
+  { label: "Analyzing rejection risks", status: "pending" },
+  { label: "Evaluating HR perspective", status: "pending" },
+  { label: "Generating personalized improvements", status: "pending" },
+  { label: "Analysis complete!", status: "pending" },
 ];
 
 // ============================================================================
@@ -48,6 +62,25 @@ interface AnalysisRecord {
   visa_flagged: boolean;
   file_name: string | null;
   file_type: string | null;
+  // Cached ATS scores
+  ats_overall_score: number | null;
+  ats_keyword_match_pct: number | null;
+  ats_formatting_score: number | null;
+  ats_section_score: number | null;
+  ats_matched_keywords: string[] | null;
+  ats_missing_keywords: string[] | null;
+  ats_issues: ATSIssue[] | null;
+  // Cached HR scores
+  hr_overall_score: number | null;
+  hr_formatting_score: number | null;
+  hr_semantic_score: number | null;
+  hr_llm_score: number | null;
+  hr_feedback: HRFeedback[] | null;
+  // Cached suggestions
+  suggestions: Suggestion[] | null;
+  // Structured content
+  structured_content: StructuredResume | null;
+  selected_format: ResumeFormatId | null;
 }
 
 // ============================================================================
@@ -73,16 +106,30 @@ export default function ResultsPage({
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [visaFlagged, setVisaFlagged] = useState(false);
 
+  // Learned patterns from database
+  const [learnedPatterns, setLearnedPatterns] = useState<LearnedPatterns | null>(null);
+  const [similarJobsCount, setSimilarJobsCount] = useState(0);
+
   // UI state
   const [steps, setSteps] = useState<LoadingStep[]>(INITIAL_STEPS);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
-  const [activeView, setActiveView] = useState<ViewMode>("ats");
-  const [selectedSuggestionId, setSelectedSuggestionId] = useState<string | null>(null);
-  const editorRef = useRef<HTMLDivElement>(null);
 
   // Track dismissed suggestions
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+
+  // Save state
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedText, setLastSavedText] = useState("");
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Structured editor state
+  const [structuredResume, setStructuredResume] = useState<StructuredResume | null>(null);
+  const [isParsingStructured, setIsParsingStructured] = useState(false);
+
+  // Template/format state
+  const [selectedFormat, setSelectedFormat] = useState<ResumeFormatId | null>(null);
 
   // Fetch analysis record
   useEffect(() => {
@@ -120,7 +167,7 @@ export default function ResultsPage({
     []
   );
 
-  // Run analysis pipeline
+  // Run analysis pipeline with granular progress updates
   const runAnalysis = useCallback(async () => {
     if (!analysis) return;
 
@@ -133,59 +180,66 @@ export default function ResultsPage({
     setSuggestions([]);
     setVisaFlagged(false);
     setDismissedIds(new Set());
-    setSelectedSuggestionId(null);
+    setLearnedPatterns(null);
+    setSimilarJobsCount(0);
     setSteps(INITIAL_STEPS.map((s) => ({ ...s, status: "pending" as const })));
 
     const currentResumeText = resumeText;
     const jobDescription = analysis.job_description || "";
 
     try {
-      // Step 1 & 2: Run ATS and HR scoring in parallel
+      // Step 0: Parsing resume structure
       updateStep(0, "active");
+      await new Promise((r) => setTimeout(r, 300));
+      updateStep(0, "complete");
+
+      // Step 1: Matching keywords to job description
       updateStep(1, "active");
 
-      const [atsResult, hrResult] = await Promise.allSettled([
-        fetch("/api/ats-score", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            resumeText: currentResumeText,
-            jobDescription,
-            analysisId,
-            metadata: { pageCount: 1 },
-            userContext: {
-              targetRole: analysis.target_role || undefined,
-              yearsExperience: analysis.years_experience || undefined,
-            },
-          }),
-        }).then(async (res) => {
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.error || `ATS scoring failed (${res.status})`);
-          }
-          return res.json();
+      const atsPromise = fetch("/api/ats-score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resumeText: currentResumeText,
+          jobDescription,
+          analysisId,
+          metadata: { pageCount: 1 },
+          userContext: {
+            targetRole: analysis.target_role || undefined,
+            yearsExperience: analysis.years_experience || undefined,
+          },
         }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `ATS scoring failed (${res.status})`);
+        }
+        updateStep(1, "complete");
+        updateStep(2, "active");
+        return res.json();
+      });
 
-        fetch("/api/hr-score", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            resumeText: currentResumeText,
-            jobDescription,
-            analysisId,
-            userContext: {
-              targetRole: analysis.target_role || undefined,
-              yearsExperience: analysis.years_experience || undefined,
-            },
-          }),
-        }).then(async (res) => {
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.error || `HR scoring failed (${res.status})`);
-          }
-          return res.json();
+      const hrPromise = fetch("/api/hr-score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resumeText: currentResumeText,
+          jobDescription,
+          analysisId,
+          userContext: {
+            targetRole: analysis.target_role || undefined,
+            yearsExperience: analysis.years_experience || undefined,
+          },
         }),
-      ]);
+      }).then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `HR scoring failed (${res.status})`);
+        }
+        return res.json();
+      });
+
+      const [atsResult, hrResult] = await Promise.allSettled([atsPromise, hrPromise]);
 
       // Process ATS result
       let atsData: { score: ATSScore } | null = null;
@@ -193,10 +247,12 @@ export default function ResultsPage({
         const value = atsResult.value as { score: ATSScore };
         atsData = value;
         setAtsScore(value.score);
-        updateStep(0, "complete");
+        updateStep(2, "complete");
+        updateStep(3, "complete");
       } else {
         console.error("ATS scoring failed:", atsResult.reason);
-        updateStep(0, "error");
+        updateStep(2, "error");
+        updateStep(3, "error");
       }
 
       // Process HR result
@@ -206,10 +262,10 @@ export default function ResultsPage({
         hrData = value;
         setHrScore(value.score);
         setHrLayers(value.layers);
-        updateStep(1, "complete");
+        updateStep(4, "complete");
       } else {
         console.error("HR scoring failed:", hrResult.reason);
-        updateStep(1, "error");
+        updateStep(4, "error");
       }
 
       // Visa detection
@@ -233,9 +289,9 @@ export default function ResultsPage({
         }
       }
 
-      // Step 3: Generate suggestions
+      // Step 5: Generating personalized improvements
       if (atsData || hrData) {
-        updateStep(2, "active");
+        updateStep(5, "active");
 
         try {
           const optimizeRes = await fetch("/api/optimize", {
@@ -255,21 +311,28 @@ export default function ResultsPage({
           if (optimizeRes.ok) {
             const optimizeData = await optimizeRes.json();
             setSuggestions(optimizeData.suggestions || []);
-            updateStep(2, "complete");
+
+            // Capture learned insights if returned
+            if (optimizeData.learnedInsights) {
+              setLearnedPatterns(optimizeData.learnedInsights.patterns || null);
+              setSimilarJobsCount(optimizeData.learnedInsights.similarJobsFound || 0);
+            }
+
+            updateStep(5, "complete");
           } else {
             console.error("Optimization failed");
-            updateStep(2, "error");
+            updateStep(5, "error");
           }
         } catch (optimizeErr) {
           console.error("Optimization failed:", optimizeErr);
-          updateStep(2, "error");
+          updateStep(5, "error");
         }
       } else {
-        updateStep(2, "error");
+        updateStep(5, "error");
       }
 
-      // Step 4: Done
-      updateStep(3, "complete");
+      // Step 6: Analysis complete!
+      updateStep(6, "complete");
       setAnalysisComplete(true);
     } catch (err) {
       console.error("Analysis pipeline failed:", err);
@@ -279,14 +342,57 @@ export default function ResultsPage({
     }
   }, [analysis, resumeText, analysisId, updateStep]);
 
-  // Auto-start analysis
+  // Check for cached results and restore them
+  const restoreCachedResults = useCallback((record: AnalysisRecord): boolean => {
+    if (record.ats_overall_score !== null && record.hr_overall_score !== null) {
+      const cachedAtsScore: ATSScore = {
+        overall: record.ats_overall_score,
+        keywordMatchPct: record.ats_keyword_match_pct ?? 0,
+        formattingScore: record.ats_formatting_score ?? 0,
+        sectionScore: record.ats_section_score ?? 0,
+        matchedKeywords: record.ats_matched_keywords ?? [],
+        missingKeywords: record.ats_missing_keywords ?? [],
+        issues: record.ats_issues ?? [],
+        passed: record.ats_overall_score >= 70,
+      };
+
+      const cachedHrScore: HRScore = {
+        overall: record.hr_overall_score,
+        formattingScore: record.hr_formatting_score ?? 0,
+        semanticScore: record.hr_semantic_score ?? 0,
+        llmScore: record.hr_llm_score ?? 0,
+        feedback: record.hr_feedback ?? [],
+      };
+
+      setAtsScore(cachedAtsScore);
+      setHrScore(cachedHrScore);
+
+      if (record.suggestions && record.suggestions.length > 0) {
+        setSuggestions(record.suggestions);
+      }
+
+      setVisaFlagged(record.visa_flagged);
+      setSteps(INITIAL_STEPS.map((s) => ({ ...s, status: "complete" as const })));
+      setAnalysisComplete(true);
+
+      return true;
+    }
+    return false;
+  }, []);
+
+  // Auto-start analysis or restore cached results
   const hasStarted = useRef(false);
   useEffect(() => {
     if (analysis && !hasStarted.current) {
       hasStarted.current = true;
+
+      if (restoreCachedResults(analysis)) {
+        return;
+      }
+
       runAnalysis();
     }
-  }, [analysis, runAnalysis]);
+  }, [analysis, runAnalysis, restoreCachedResults]);
 
   // Handle applying a suggestion fix
   const handleApplyFix = useCallback(
@@ -316,8 +422,6 @@ export default function ResultsPage({
             return s;
           })
       );
-
-      setSelectedSuggestionId(null);
     },
     [resumeText]
   );
@@ -325,34 +429,237 @@ export default function ResultsPage({
   // Handle dismissing a suggestion
   const handleDismiss = useCallback((suggestion: Suggestion) => {
     setDismissedIds((prev) => new Set(prev).add(suggestion.id));
-    setSelectedSuggestionId(null);
   }, []);
 
-  // Handle suggestion click (from sidebar "View" or editor click)
+  // Handle suggestion click
   const handleSuggestionClick = useCallback((suggestion: Suggestion) => {
-    setSelectedSuggestionId((prev) =>
-      prev === suggestion.id ? null : suggestion.id
-    );
-    // Scroll the suggestion into view in the editor
-    setTimeout(() => {
-      const markElement = editorRef.current?.querySelector(
-        `[data-suggestion-id="${suggestion.id}"]`
-      );
-      if (markElement) {
-        markElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }, 100);
+    // In the new design, suggestions are shown inline in section feedback
+    // This could scroll to the relevant section
+    console.log("Suggestion clicked:", suggestion.id);
   }, []);
 
-  // Handle text edits
-  const handleTextChange = useCallback((text: string) => {
-    setResumeText(text);
+  // Save handler
+  const handleSave = useCallback(async () => {
+    if (!analysisId || saveStatus === "saving") return;
+
+    setSaveStatus("saving");
+    try {
+      const saveData: {
+        optimized_text: string;
+        structured_content?: StructuredResume;
+        selected_format?: ResumeFormatId;
+      } = {
+        optimized_text: resumeText,
+      };
+
+      if (structuredResume) {
+        saveData.structured_content = structuredResume;
+      }
+
+      if (selectedFormat) {
+        saveData.selected_format = selectedFormat;
+      }
+
+      const response = await fetch(`/api/resumes/${analysisId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(saveData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save");
+      }
+
+      setLastSavedText(resumeText);
+      setHasUnsavedChanges(false);
+      setSaveStatus("saved");
+
+      setTimeout(() => {
+        setSaveStatus("idle");
+      }, 2000);
+    } catch (err) {
+      console.error("Save failed:", err);
+      setSaveStatus("error");
+      setTimeout(() => {
+        setSaveStatus("idle");
+      }, 3000);
+    }
+  }, [analysisId, resumeText, saveStatus, structuredResume, selectedFormat]);
+
+  // Auto-save every 30 seconds when there are unsaved changes
+  useEffect(() => {
+    if (hasUnsavedChanges && analysisComplete) {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+
+      autoSaveTimerRef.current = setTimeout(() => {
+        handleSave();
+      }, 30000);
+
+      return () => {
+        if (autoSaveTimerRef.current) {
+          clearTimeout(autoSaveTimerRef.current);
+        }
+      };
+    }
+  }, [hasUnsavedChanges, analysisComplete, handleSave]);
+
+  // Initialize lastSavedText when analysis loads
+  useEffect(() => {
+    if (analysis) {
+      const initialText = analysis.optimized_text || analysis.original_text;
+      setLastSavedText(initialText);
+
+      if (analysis.structured_content) {
+        setStructuredResume(analysis.structured_content);
+      }
+
+      if (analysis.selected_format) {
+        setSelectedFormat(analysis.selected_format);
+      }
+    }
+  }, [analysis]);
+
+  // Parse structured resume when analysis completes
+  useEffect(() => {
+    async function parseStructured() {
+      if (!analysisComplete || !resumeText || structuredResume || isParsingStructured) return;
+
+      setIsParsingStructured(true);
+      try {
+        const response = await fetch("/api/parse-structured", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: resumeText }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setStructuredResume(data.structuredResume);
+        }
+      } catch (err) {
+        console.error("Failed to parse structured resume:", err);
+      } finally {
+        setIsParsingStructured(false);
+      }
+    }
+
+    parseStructured();
+  }, [analysisComplete, resumeText, structuredResume, isParsingStructured]);
+
+  // Handle structured resume changes
+  const handleStructuredChange = useCallback((updated: StructuredResume) => {
+    setStructuredResume(updated);
+
+    const newText = structuredToText(updated);
+    setResumeText(newText);
+
+    setHasUnsavedChanges(true);
+    setSaveStatus("idle");
+  }, []);
+
+  // Handle accepting a Grammarly-style fix
+  const handleAcceptFix = useCallback((fix: import("@/lib/types").GrammarlyFix) => {
+    if (!structuredResume || !fix.originalText) {
+      // Can't apply fix without structured resume or original text
+      return;
+    }
+
+    // Try to find and replace the text in various sections
+    let updated = { ...structuredResume };
+    let found = false;
+
+    // Check summary
+    if (updated.summary?.includes(fix.originalText)) {
+      updated.summary = updated.summary.replace(fix.originalText, fix.suggestedText);
+      found = true;
+    }
+
+    // Check experience bullets
+    if (!found) {
+      const updatedExperience = updated.experience.map(exp => {
+        const updatedBullets = exp.bullets.map(bullet => {
+          if (bullet.includes(fix.originalText)) {
+            found = true;
+            return bullet.replace(fix.originalText, fix.suggestedText);
+          }
+          return bullet;
+        });
+        return { ...exp, bullets: updatedBullets };
+      });
+      if (found) {
+        updated.experience = updatedExperience;
+      }
+    }
+
+    // Check education highlights
+    if (!found) {
+      const updatedEducation = updated.education.map(edu => {
+        const updatedHighlights = edu.highlights.map(highlight => {
+          if (highlight.includes(fix.originalText)) {
+            found = true;
+            return highlight.replace(fix.originalText, fix.suggestedText);
+          }
+          return highlight;
+        });
+        return { ...edu, highlights: updatedHighlights };
+      });
+      if (found) {
+        updated.education = updatedEducation;
+      }
+    }
+
+    // Check project bullets
+    if (!found && updated.projects) {
+      const updatedProjects = updated.projects.map(proj => {
+        const updatedBullets = proj.bullets.map(bullet => {
+          if (bullet.includes(fix.originalText)) {
+            found = true;
+            return bullet.replace(fix.originalText, fix.suggestedText);
+          }
+          return bullet;
+        });
+        return { ...proj, bullets: updatedBullets };
+      });
+      if (found) {
+        updated.projects = updatedProjects;
+      }
+    }
+
+    // Check certifications
+    if (!found && updated.certifications) {
+      const updatedCerts = updated.certifications.map(cert => {
+        if (cert.includes(fix.originalText)) {
+          found = true;
+          return cert.replace(fix.originalText, fix.suggestedText);
+        }
+        return cert;
+      });
+      if (found) {
+        updated.certifications = updatedCerts;
+      }
+    }
+
+    if (found) {
+      handleStructuredChange(updated);
+    }
+  }, [structuredResume, handleStructuredChange]);
+
+  // Handle format selection
+  const handleFormatSelect = useCallback((formatId: ResumeFormatId) => {
+    setSelectedFormat(formatId);
+    setHasUnsavedChanges(true);
   }, []);
 
   // Filtered suggestions
   const activeSuggestions = suggestions.filter((s) => !dismissedIds.has(s.id));
-  const selectedSuggestion =
-    activeSuggestions.find((s) => s.id === selectedSuggestionId) || null;
+
+  // Merge section feedback
+  const sectionFeedback = useMemo(() => {
+    if (!analysisComplete) return undefined;
+    return mergeSectionFeedback(structuredResume, atsScore, hrScore, hrLayers);
+  }, [analysisComplete, structuredResume, atsScore, hrScore, hrLayers]);
 
   // Loading state
   if (!analysis && !error) {
@@ -393,7 +700,11 @@ export default function ResultsPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <ResultsHeader>
+      <ResultsHeader
+        onSave={analysisComplete ? handleSave : undefined}
+        saveStatus={saveStatus}
+        hasUnsavedChanges={hasUnsavedChanges}
+      >
         {analysisComplete && (
           <Button
             variant="outline"
@@ -413,10 +724,12 @@ export default function ResultsPage({
           resumeText={resumeText}
           analysisId={analysisId}
           disabled={isAnalyzing}
+          structuredResume={structuredResume}
+          selectedFormat={selectedFormat}
         />
       </ResultsHeader>
 
-      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-[1600px]">
+      <div className="results-container mx-auto px-4 md:px-6 py-6 md:py-8">
         {/* Back button */}
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
           <ArrowLeft className="h-4 w-4" />
@@ -446,21 +759,18 @@ export default function ResultsPage({
         {/* Loading state */}
         {isAnalyzing && (
           <>
-            {/* Loading steps */}
             <Card className="mb-6 animate-fade-up">
               <CardContent className="pt-6 pb-6">
                 <LoadingSteps steps={steps} />
               </CardContent>
             </Card>
 
-            {/* Score cards skeleton */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <ATSScoreCardSkeleton />
               <HRScoreCardSkeleton />
             </div>
 
-            {/* Editor skeleton */}
-            {steps[2]?.status === "active" && (
+            {steps[5]?.status === "active" && (
               <div className="space-y-4 mb-6">
                 <SuggestionGeneratingSkeleton />
                 <EditorSkeleton />
@@ -500,11 +810,11 @@ export default function ResultsPage({
           </Card>
         )}
 
-        {/* Main content with sidebar layout */}
+        {/* Main content with new single-column layout */}
         {analysisComplete && (
           <ResultsLayout
-            activeView={activeView}
-            onViewChange={setActiveView}
+            activeView="ats"
+            onViewChange={() => {}}
             atsScore={atsScore}
             hrScore={hrScore}
             hrLayers={hrLayers}
@@ -512,38 +822,59 @@ export default function ResultsPage({
             onApplyFix={handleApplyFix}
             onDismiss={handleDismiss}
             onViewSuggestion={handleSuggestionClick}
+            jobDescription={analysis?.job_description || ""}
+            sectionFeedback={sectionFeedback}
+            learnedPatterns={learnedPatterns}
+            similarJobsCount={similarJobsCount}
           >
-            <div className="space-y-4 animate-fade-up">
+            <div className="space-y-6 animate-fade-up">
+              {/* Editor Card */}
               <Card className="p-4 md:p-6">
-                {/* Suggestion count header */}
-                {activeSuggestions.length > 0 && (
-                  <div className="flex items-center justify-between mb-4 pb-4 border-b">
-                    <h2 className="font-display font-semibold text-lg">Resume Editor</h2>
+                <div className="flex items-center justify-between mb-4 pb-4 border-b">
+                  <h2 className="font-display font-semibold text-lg">Resume Editor</h2>
+                  {activeSuggestions.length > 0 && (
                     <p className="text-sm text-muted-foreground">
                       <span className="font-medium text-foreground">{activeSuggestions.length}</span>
                       {" "}suggestion{activeSuggestions.length !== 1 ? "s" : ""} remaining
                     </p>
+                  )}
+                </div>
+
+                {/* Structured Editor Only */}
+                {structuredResume ? (
+                  <StructuredResumeEditor
+                    resume={structuredResume}
+                    onChange={handleStructuredChange}
+                    suggestions={activeSuggestions}
+                    onSuggestionClick={handleSuggestionClick}
+                    sectionFeedback={sectionFeedback}
+                    atsScore={atsScore}
+                    hrScore={hrScore}
+                    onAcceptFix={handleAcceptFix}
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground justify-center">
+                    <div className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                    Parsing resume structure...
                   </div>
                 )}
 
-                {/* Editor with popover */}
-                <div className="relative" ref={editorRef}>
-                  <GrammarlyEditor
-                    text={resumeText}
-                    onTextChange={handleTextChange}
-                    suggestions={activeSuggestions}
-                    activeView={activeView}
-                    onSuggestionClick={handleSuggestionClick}
-                    selectedSuggestionId={selectedSuggestionId}
-                  />
-                  <SuggestionPopover
-                    suggestion={selectedSuggestion}
-                    onApplyFix={handleApplyFix}
-                    onDismiss={handleDismiss}
-                    editorElement={editorRef.current}
-                  />
-                </div>
+                {isParsingStructured && structuredResume && (
+                  <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
+                    <div className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                    Updating structure...
+                  </div>
+                )}
               </Card>
+
+              {/* Template Gallery */}
+              <TemplateGallery
+                analysisId={analysisId}
+                jobDescription={analysis?.job_description || ""}
+                structuredResume={structuredResume}
+                selectedFormat={selectedFormat}
+                onFormatSelect={handleFormatSelect}
+              />
             </div>
           </ResultsLayout>
         )}

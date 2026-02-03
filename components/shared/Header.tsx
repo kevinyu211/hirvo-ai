@@ -17,11 +17,7 @@ import { Logo } from "@/components/shared/Logo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
-interface HeaderProps {
-  variant?: "default" | "minimal";
-}
-
-export function Header({ variant = "default" }: HeaderProps) {
+export function Header() {
   const router = useRouter();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -68,14 +64,14 @@ export function Header({ variant = "default" }: HeaderProps) {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass border-b">
+    <header className="fixed top-0 left-0 right-0 z-50 glass-strong border-b shadow-soft">
       <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
         <Logo href="/" />
 
-        <nav className="flex items-center gap-2 md:gap-3">
+        <nav className="flex items-center gap-2 md:gap-4">
           <ThemeToggle />
           {loading ? (
-            <div className="h-10 w-20 bg-muted animate-pulse rounded-lg" />
+            <div className="h-11 w-24 bg-muted animate-pulse rounded-xl" />
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -123,12 +119,12 @@ export function Header({ variant = "default" }: HeaderProps) {
           ) : (
             <>
               <Link href="/login">
-                <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground font-medium">
                   Login
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button className="gradient-emerald text-white shadow-soft hover:shadow-glow transition-all duration-300 border-0">
+                <Button variant="accent">
                   Get Started
                 </Button>
               </Link>

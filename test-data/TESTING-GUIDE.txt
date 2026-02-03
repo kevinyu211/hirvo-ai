@@ -1,0 +1,73 @@
+COMPLETE TESTING GUIDE FOR SELF-IMPROVING SYSTEM
+=================================================
+
+STEP 1: ADD EXAMPLES VIA ADMIN PAGE (/admin)
+--------------------------------------------
+Use files from: test-data/
+
+| Resume File                          | Job File                    | Outcome           |
+|--------------------------------------|-----------------------------|-------------------|
+| resume-1-marketing-positive.txt      | job-1-marketing-manager.txt | Positive > Interview |
+| resume-2-data-scientist-positive.txt | job-2-data-scientist.txt    | Positive > Offer     |
+| resume-3-junior-dev-negative.txt     | job-3-senior-developer.txt  | Negative > Rejected ATS |
+| resume-4-product-manager-positive.txt| job-4-product-manager.txt   | Positive > Interview |
+| resume-5-nurse-positive.txt          | job-5-icu-nurse.txt         | Positive > Offer     |
+
+For each pair:
+1. Go to /admin
+2. Paste job description from job-*.txt
+3. Paste resume text from resume-*.txt (or upload .pdf/.docx from documents/)
+4. Select outcome
+5. Click "Submit & Auto-Label"
+6. Review and save
+
+
+STEP 2: TEST USER FLOW (/dashboard)
+-----------------------------------
+Use files from: test-data/user-test-jobs/
+
+These are SIMILAR (but not identical) job descriptions that should
+trigger the self-improving system to find matches.
+
+| Upload This Resume                   | With This Job Description              | Expected Result |
+|--------------------------------------|----------------------------------------|-----------------|
+| documents/resume-1-marketing-*.pdf   | user-test-jobs/test-job-for-marketing.txt | Should find match, show success rate |
+| documents/resume-2-data-scientist-*.pdf | user-test-jobs/test-job-for-data-scientist.txt | Should find match, show success rate |
+| documents/resume-4-product-manager-*.pdf | user-test-jobs/test-job-for-product-manager.txt | Should find match, show success rate |
+| documents/resume-5-nurse-*.pdf       | user-test-jobs/test-job-for-nurse.txt    | Should find match, show success rate |
+| documents/resume-3-junior-dev-*.pdf  | user-test-jobs/test-job-for-junior-dev.txt | Should show LOW success (negative example) |
+
+
+WHAT TO VERIFY:
+---------------
+1. After admin upload:
+   - Example appears in "All Examples" table
+   - Stats update (total count, industry breakdown)
+
+2. After user flow test:
+   - Format Recommendations section shows "Based on X applications"
+   - Success rates reflect the outcomes you added
+   - Similar jobs are being matched (check console/network for API calls)
+
+
+FOLDER STRUCTURE:
+-----------------
+test-data/
+├── documents/                    # PDF and DOCX resumes for upload
+│   ├── resume-1-marketing-positive.pdf
+│   ├── resume-1-marketing-positive.docx
+│   └── ... (all 5 resumes in both formats)
+├── user-test-jobs/               # Job descriptions for user flow testing
+│   ├── test-job-for-marketing.txt
+│   ├── test-job-for-data-scientist.txt
+│   └── ...
+├── resume-*.txt                  # Raw resume text for admin paste
+├── job-*.txt                     # Job descriptions for admin paste
+└── TESTING-GUIDE.txt             # This file
+
+
+QUICK TEST SEQUENCE:
+--------------------
+1. Admin: Add resume-2-data-scientist + job-2-data-scientist (Positive > Offer)
+2. Dashboard: Upload resume-2-data-scientist.pdf + test-job-for-data-scientist.txt
+3. Check: Format recommendations should say "Based on 1 application" with success rate
