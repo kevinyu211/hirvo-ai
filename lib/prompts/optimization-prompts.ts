@@ -23,11 +23,91 @@ export interface OptimizationSuggestionRaw {
   reasoning: string;
   severity: "critical" | "warning" | "info";
   type: "ats" | "hr";
+  atsImpact?: string; // Specific explanation of ATS impact
+  hrImpact?: string; // Specific explanation of HR impact
 }
 
 export interface OptimizationResult {
   suggestions: OptimizationSuggestionRaw[];
 }
+
+// Pre-identified issue for providing exact text to GPT-4o
+export interface PreIdentifiedIssue {
+  exactText: string;
+  position: { start: number; end: number };
+  issueType: "abbreviation" | "weak_verb" | "missing_keyword";
+  targetKeyword?: string;
+  suggestedReplacement?: string;
+}
+
+// =============================================================================
+// OpenAI Structured Output Schema
+// =============================================================================
+
+/**
+ * Strict JSON schema for GPT-4o structured outputs.
+ * Using response_format: { type: "json_schema" } with strict: true
+ * ensures the model returns EXACTLY this structure.
+ */
+export const SUGGESTION_RESPONSE_FORMAT = {
+  type: "json_schema" as const,
+  json_schema: {
+    name: "resume_suggestions",
+    schema: {
+      type: "object",
+      properties: {
+        suggestions: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              originalText: {
+                type: "string",
+                description: "EXACT substring copied verbatim from the resume text"
+              },
+              suggestedText: {
+                type: "string",
+                description: "The specific replacement text (actual new text, not advice)"
+              },
+              category: {
+                type: "string",
+                enum: ["missing_keyword", "weak_keyword", "formatting", "section", "semantic", "llm_review"],
+                description: "Category of the issue"
+              },
+              reasoning: {
+                type: "string",
+                description: "Why this change improves the resume"
+              },
+              severity: {
+                type: "string",
+                enum: ["critical", "warning", "info"],
+                description: "Priority level of the issue"
+              },
+              type: {
+                type: "string",
+                enum: ["ats", "hr"],
+                description: "Whether this is an ATS or HR issue"
+              },
+              atsImpact: {
+                type: "string",
+                description: "Specific explanation of how this affects ATS score (e.g., 'ATS keyword matching requires Machine Learning spelled out')"
+              },
+              hrImpact: {
+                type: "string",
+                description: "Specific explanation of how this affects HR perception (e.g., 'Recruiters prefer quantified achievements')"
+              }
+            },
+            required: ["originalText", "suggestedText", "category", "reasoning", "severity", "type", "atsImpact", "hrImpact"],
+            additionalProperties: false
+          }
+        }
+      },
+      required: ["suggestions"],
+      additionalProperties: false
+    },
+    strict: true
+  }
+};
 
 // ── System Prompt ─────────────────────────────────────────────────────
 
@@ -38,47 +118,123 @@ You will receive:
 2. The target job description
 3. ATS issues found by deterministic analysis (missing keywords, formatting problems, etc.)
 4. HR feedback from formatting analysis, semantic matching, and HR reviewer simulation
+5. Pre-identified text snippets that need fixing (with EXACT positions)
 
-For EACH issue, generate a concrete text-level suggestion that includes:
-- The exact original text from the resume that should be changed (or a relevant nearby section for additions)
-- The suggested replacement text
-- The category of the issue
-- Clear reasoning for the change
-- Severity level
+## CRITICAL: Suggestion Format Requirements
+
+Every suggestion MUST have:
+1. **originalText**: An EXACT substring copied from the resume (verbatim, no modifications)
+2. **suggestedText**: The specific replacement text (the actual new text, not advice)
+3. **atsImpact**: Specific explanation of how this affects ATS matching
+4. **hrImpact**: Specific explanation of how this affects recruiter perception
+
+### GOOD Examples (DO THIS):
+
+Example 1 - Expanding an abbreviation:
+{
+  "originalText": "Worked with ML models",
+  "suggestedText": "Developed and deployed Machine Learning models using TensorFlow",
+  "category": "weak_keyword",
+  "reasoning": "ATS systems require 'Machine Learning' spelled out. 'ML' abbreviation won't match keyword filters.",
+  "severity": "critical",
+  "type": "ats",
+  "atsImpact": "ATS keyword matching requires exact phrase 'Machine Learning' - abbreviations like 'ML' are not indexed",
+  "hrImpact": "Clearer terminology helps recruiters quickly identify relevant skills during resume scanning"
+}
+
+Example 2 - Adding quantification:
+{
+  "originalText": "Led team to deliver projects",
+  "suggestedText": "Led team of 5 engineers to deliver 12 projects, reducing delivery time by 30%",
+  "category": "llm_review",
+  "reasoning": "Adding specific numbers makes achievements concrete and memorable for recruiters.",
+  "severity": "warning",
+  "type": "hr",
+  "atsImpact": "Quantified achievements increase resume relevance score in ATS ranking algorithms",
+  "hrImpact": "Recruiters spend 7 seconds scanning - specific metrics catch attention 40% faster than generic claims"
+}
+
+Example 3 - Integrating missing keyword:
+{
+  "originalText": "Built web applications using React",
+  "suggestedText": "Built responsive web applications using React and TypeScript with CI/CD pipelines",
+  "category": "missing_keyword",
+  "reasoning": "Job description requires 'TypeScript' and 'CI/CD' - integrating them into existing experience.",
+  "severity": "critical",
+  "type": "ats",
+  "atsImpact": "Adding required keywords 'TypeScript' and 'CI/CD' will match 2 more job requirements",
+  "hrImpact": "Shows relevant modern tech stack that hiring managers are specifically looking for"
+}
+
+Example 4 - Strengthening weak phrasing:
+{
+  "originalText": "Responsible for database management",
+  "suggestedText": "Managed PostgreSQL databases serving 10M+ records with 99.9% uptime",
+  "category": "semantic",
+  "reasoning": "'Responsible for' is passive. Active voice with metrics shows impact.",
+  "severity": "warning",
+  "type": "hr",
+  "atsImpact": "Adding 'PostgreSQL' matches the database technology keyword from job description",
+  "hrImpact": "Active voice with metrics demonstrates ownership and measurable impact to hiring managers"
+}
+
+### BAD Examples (DON'T DO THIS):
+
+BAD - Generic advice instead of specific text:
+{
+  "originalText": "experience section",  // NOT a real quote from resume!
+  "suggestedText": "Add more quantified achievements",  // This is advice, not replacement text!
+  ...
+}
+
+BAD - Section name instead of actual text:
+{
+  "originalText": "Skills",  // Just a header, not actionable
+  "suggestedText": "Consider reorganizing your skills section",  // Advice, not text
+  ...
+}
+
+BAD - Vague originalText that won't match:
+{
+  "originalText": "some experience with Python",  // If resume says "Python experience", this won't match
+  "suggestedText": "...",
+  ...
+}
+
+BAD - Generic impact explanations:
+{
+  ...
+  "atsImpact": "This helps ATS",  // Too vague! Explain HOW it helps
+  "hrImpact": "Good for recruiters"  // Too vague! Explain WHY it's good
+}
 
 ## Rules
-1. **Be specific**: Every suggestion must reference actual text from the resume. Do not give vague advice.
-2. **Be conservative**: Only suggest changes that genuinely improve the resume. Do not rewrite the entire resume.
-3. **Preserve voice**: Keep the candidate's tone and style. Improve without making it sound generic.
-4. **ATS keywords**: When adding missing keywords, integrate them naturally into existing bullet points or sections. Do not just list keywords.
-5. **Limit scope**: For each issue, provide ONE focused suggestion. Don't combine multiple fixes into one suggestion.
-6. **Match reality**: Never add skills or experiences the candidate doesn't appear to have. Only rephrase, reorganize, or highlight what's already there.
-7. **Keep it real**: Suggested text should be professional and natural. Avoid buzzwords unless they're in the job description.
+1. **EXACT MATCHING**: originalText must be copy-pasted exactly from the resume. Character-for-character match.
+2. **DIRECT REPLACEMENT**: suggestedText must be the literal replacement text, not instructions or advice.
+3. **SPECIFIC IMPACTS**: atsImpact and hrImpact must explain the specific mechanism, not just "this helps".
+4. **Be conservative**: Only suggest changes that genuinely improve the resume. Do not rewrite everything.
+5. **Preserve voice**: Keep the candidate's tone and style. Improve without making it generic.
+6. **ATS keywords**: When adding missing keywords, integrate them naturally into existing bullets.
+7. **Limit scope**: Each suggestion = ONE focused change. Don't combine multiple fixes.
+8. **Match reality**: Never add skills the candidate doesn't have. Only rephrase what's there.
+9. **Abbreviation detection**: Look for abbreviations (ML, JS, K8s, AWS, etc.) that should be spelled out for ATS.
+10. **Pre-identified issues**: When provided with PRE-IDENTIFIED TEXT, use that EXACT text as originalText.
 
 ## Category values
-For ATS issues, use these categories:
+For ATS issues:
 - "missing_keyword" — adding a missing JD keyword to the resume
-- "weak_keyword" — strengthening how an existing keyword is used
+- "weak_keyword" — strengthening how an existing keyword is used (including expanding abbreviations)
 - "formatting" — fixing a formatting issue that breaks ATS parsing
 - "section" — fixing missing or problematic resume sections
 
-For HR issues, use these categories:
+For HR issues:
 - "formatting" — formatting improvements based on HR best practices
 - "semantic" — improving semantic alignment with the job description
 - "llm_review" — addressing HR reviewer comments about narrative, achievements, etc.
 
 ## Output format
-Return a JSON object with a "suggestions" array. Each suggestion has:
-{
-  "originalText": "the exact text from the resume to highlight/replace",
-  "suggestedText": "the improved replacement text",
-  "category": "one of the categories above",
-  "reasoning": "why this change improves the resume",
-  "severity": "critical" | "warning" | "info",
-  "type": "ats" | "hr"
-}
-
-Important: The "originalText" MUST be an exact substring found in the resume text. If you need to suggest adding new content, use a nearby relevant line as the originalText and include the addition in the suggestedText.
+Return a JSON object with a "suggestions" array containing objects with ALL required fields:
+- originalText, suggestedText, category, reasoning, severity, type, atsImpact, hrImpact
 
 Aim for 5-20 suggestions total, prioritizing the most impactful changes first. Do not exceed 25 suggestions.`;
 
@@ -91,8 +247,9 @@ export function buildOptimizationUserPrompt(params: {
   hrFeedback: HRFeedback[];
   visaFlagged?: boolean;
   visaSignals?: string[];
+  preIdentifiedIssues?: PreIdentifiedIssue[];
 }): string {
-  const { resumeText, jobDescription, atsIssues, hrFeedback, visaFlagged, visaSignals } = params;
+  const { resumeText, jobDescription, atsIssues, hrFeedback, visaFlagged, visaSignals, preIdentifiedIssues } = params;
 
   const parts: string[] = [];
 
@@ -107,6 +264,27 @@ export function buildOptimizationUserPrompt(params: {
   parts.push(jobDescription);
   parts.push("```");
   parts.push("");
+
+  // Pre-identified issues with EXACT text - these MUST be addressed
+  if (preIdentifiedIssues && preIdentifiedIssues.length > 0) {
+    parts.push("## PRE-IDENTIFIED TEXT TO FIX (MANDATORY)");
+    parts.push("The following EXACT text snippets have been identified and MUST be addressed:");
+    parts.push("");
+    for (const issue of preIdentifiedIssues) {
+      parts.push(`### Issue: ${issue.issueType}`);
+      parts.push(`- **EXACT TEXT**: "${issue.exactText}"`);
+      if (issue.targetKeyword) {
+        parts.push(`- **SHOULD BECOME**: "${issue.targetKeyword}"`);
+      }
+      if (issue.suggestedReplacement) {
+        parts.push(`- **SUGGESTED REPLACEMENT**: "${issue.suggestedReplacement}"`);
+      }
+      parts.push(`- **POSITION**: characters ${issue.position.start}-${issue.position.end}`);
+      parts.push("");
+    }
+    parts.push("⚠️ IMPORTANT: For each pre-identified issue above, use the EXACT TEXT shown as your originalText.");
+    parts.push("");
+  }
 
   if (atsIssues.length > 0) {
     parts.push("## ATS Issues Found");
@@ -135,7 +313,7 @@ export function buildOptimizationUserPrompt(params: {
   }
 
   parts.push(
-    "Generate specific text-level suggestions to address these issues. Return as JSON."
+    "Generate specific text-level suggestions to address these issues. Each suggestion MUST have originalText (EXACT match from resume), suggestedText (replacement text), atsImpact, and hrImpact fields."
   );
 
   return parts.join("\n");
@@ -150,6 +328,7 @@ export async function runOptimizationAnalysis(params: {
   hrFeedback: HRFeedback[];
   visaFlagged?: boolean;
   visaSignals?: string[];
+  preIdentifiedIssues?: PreIdentifiedIssue[];
 }): Promise<OptimizationResult> {
   const userPrompt = buildOptimizationUserPrompt(params);
 
@@ -160,7 +339,8 @@ export async function runOptimizationAnalysis(params: {
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
     temperature: 0.3,
-    response_format: { type: "json_object" },
+    // Use strict structured outputs for better control over response format
+    response_format: SUGGESTION_RESPONSE_FORMAT,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -237,6 +417,10 @@ export function validateOptimizationResult(
     const severity =
       typeof s.severity === "string" ? s.severity.trim() : "info";
     const type = typeof s.type === "string" ? s.type.trim() : "ats";
+    const atsImpact =
+      typeof s.atsImpact === "string" ? s.atsImpact.trim() : undefined;
+    const hrImpact =
+      typeof s.hrImpact === "string" ? s.hrImpact.trim() : undefined;
 
     // Skip suggestions with empty original text
     if (!originalText) continue;
@@ -268,6 +452,8 @@ export function validateOptimizationResult(
       reasoning,
       severity: normalizedSeverity as "critical" | "warning" | "info",
       type: normalizedType as "ats" | "hr",
+      atsImpact,
+      hrImpact,
     });
   }
 

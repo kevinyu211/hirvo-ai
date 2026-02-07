@@ -71,6 +71,13 @@ export interface Suggestion {
   reasoning: string;
   textRange: { start: number; end: number };
   severity: "critical" | "warning" | "info";
+  // Semantic matching fields (for abbreviation/synonym detection)
+  semanticMatch?: boolean; // True if this was found via synonym detection
+  targetKeyword?: string; // The JD keyword we're trying to match (e.g., "Machine Learning")
+  matchedSynonym?: string; // The synonym found in resume (e.g., "ML")
+  // Impact explanations for UI display
+  atsImpact?: string; // Explanation of how this affects ATS score (e.g., "ATS requires 'Machine Learning' spelled out")
+  hrImpact?: string; // Explanation of how this affects HR perception (e.g., "Recruiters prefer standard terminology")
 }
 
 export interface AnalysisResult {
